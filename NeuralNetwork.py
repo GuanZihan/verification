@@ -19,28 +19,28 @@ class NeuralNetwork:
     def load_data(self):
         (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
         # Normalize the images.
-        train_images = (train_images / 255) -0.5
-        test_images = (test_images / 255) -0.5
+        train_images = (train_images / 255)
+        test_images = (test_images / 255)
         # Flatten the images.
         train_images = train_images.reshape((-1, 784))
         test_images = test_images.reshape((-1, 784))
         return train_images, train_labels, test_images, test_labels
 
-        # Creating a Sequential Model and adding the layers
+    # Creating a Sequential Model and adding the layers
     def create_model(self):
         model = Sequential([
-                Dense(15, activation='relu', input_shape=(784,)),
-                Dense(10, activation='softmax'),
+                Dense(self.dims[1], activation='relu', input_shape=(784,)),
+                Dense(self.dims[2], activation='relu'),
             ])
         model.compile(optimizer='adam',
                           loss='sparse_categorical_crossentropy',
                           metrics=['accuracy'])
         self.model = model
 
-    def train(self, is_trained):
+    def train(self, cache):
         train_images, train_labels, test_images, test_labels = self.load_data()
         self.create_model()
-        if is_trained:
+        if cache:
             self.model.load_weights(self.checkpoint_path)
         else:
             self.model.fit(x=train_images,y=train_labels, epochs=2, callbacks=[self.cp_callback])
@@ -59,6 +59,7 @@ class NeuralNetwork:
 
     def relu(self, x):
         return np.maximum(x, 0)
+
     def interval_arithmetic(self, x_min, x_max):
         X_min = []
         X_max = []
@@ -67,8 +68,8 @@ class NeuralNetwork:
         X_min.append(x_min)
         X_max.append(x_max)
         for i in range(len(self.dims) - 2):
-            Y_min.append((np.matmul(np.maximum(self.weights[i].T, np.zeros((self.dims[i + 1], self.dims[i]))), X_min[i].T) + np.matmul(np.minimum(self.weights[i].T, np.zeros((self.dims[i + 1], self.dims[i]))), X_max[i].T) + self.bias[i]).T)
-            Y_max.append((np.matmul(np.maximum(self.weights[i].T, np.zeros((self.dims[i + 1], self.dims[i]))), X_max[i].T) + np.matmul(np.minimum(self.weights[i].T, np.zeros((self.dims[i + 1], self.dims[i]))), X_min[i].T) + self.bias[i]).T)
+            Y_min.append((np.matmul(np.maximum(self.weights[i], np.zeros((self.dims[i + 1], self.dims[i]))), X_min[i]) + np.matmul(np.minimum(self.weights[i], np.zeros((self.dims[i + 1], self.dims[i]))), X_max[i]) + self.bias[i]).T)
+            Y_max.append((np.matmul(np.maximum(self.weights[i], np.zeros((self.dims[i + 1], self.dims[i]))), X_max[i]) + np.matmul(np.minimum(self.weights[i], np.zeros((self.dims[i + 1], self.dims[i]))), X_min[i]) + self.bias[i]).T)
 
             X_min.append(self.relu(Y_min[i]))
             X_max.append(self.relu(Y_max[i]))
