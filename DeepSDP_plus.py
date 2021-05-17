@@ -1,6 +1,27 @@
 import cvxpy as cvx
 import numpy as np
 
+def subsetMatrix(span1, span2, M):
+    res_input = np.meshgrid(span1, span2)
+    if span1.all() == span2.all():
+        res_1 = np.hstack(res_input[0])
+        res_1 = res_1.reshape(len(span2), len(span1))
+        return M[res_1, res_1]
+    else:
+        res_1 = np.hstack(res_input[0])
+        res_2 = np.hstack(res_input[1])
+        res_1 = res_1.reshape( len(span2), len(span1))
+        res_2 = res_2.reshape(len(span2), len(span1))
+    # all = []
+    # for index1, i in enumerate(res_1):
+    #     temp = []
+    #     for index2, j in enumerate(res_1[index1]):
+    #         temp.append(M[res_2[index1][index2], j])
+    #     all.append(temp)
+    # ret = cvx.bmat(all)
+
+        return M[res_1, res_2]
+
 def constructblkDiagonal(data, dims):
     """
     Construct the block diagonal matrix and returns
@@ -28,7 +49,7 @@ def constructblkDiagonal(data, dims):
 
 def solve(nn, x_min, x_max, y_label, target):
     """
-    solve the problem using the techniques of DeepSDP
+    solve the problem using the techniques of DeepSDP_plus
     :param nn: Nueral Network
     :param x_min: lower bound of the input x
     :param x_max: upper bound of the input x
@@ -62,13 +83,14 @@ def solve(nn, x_min, x_max, y_label, target):
     lamb = cvx.Variable((num_neurons, 1))
     eta = cvx.Variable((num_neurons, 1))
     D = cvx.Variable((num_neurons, num_neurons), diag=True)
+    delta = cvx.Variable((num_neurons, num_neurons), diag=True)
 
     if len(In) > 0:
-        constraints += [nu[In] >= 0]
+        constraints += [nu[In] >= 0, subsetMatrix(In, In, delta) == 0]
     if len(Ip) > 0:
-        constraints += [eta[Ip] >= 0]
+        constraints += [eta[Ip] >= 0, subsetMatrix(Ip, Ip, delta) == 0]
     if len(Inp) > 0:
-        constraints += [nu[Inp] >= 0, eta[Inp] >= 0]
+        constraints += [nu[Inp] >= 0, eta[Inp] >= 0, subsetMatrix(Inp, Inp, delta) >> 0]
 
     constraints +=[D >> 0]
 
@@ -80,10 +102,10 @@ def solve(nn, x_min, x_max, y_label, target):
 
     Q11 = -2 * cvx.matmul(cvx.diag(cvx.multiply(alpha_param, beta_param)), cvx.diag(lamb))
     Q12 = cvx.matmul(cvx.diag(alpha_param + beta_param), cvx.diag(lamb)) + T
-    Q13 = -nu
+    Q13 = -nu + cvx.matmul(delta, Y_max.T)
     Q22 = -2 * cvx.diag(lamb) - 2 * D -2 * T
-    Q23 = nu + eta + cvx.matmul(D, X_min.T+ X_max.T)
-    Q33 = -2 * cvx.matmul(cvx.matmul(X_min, D),cvx.transpose(X_max))
+    Q23 = nu + eta + cvx.matmul(D, X_min.T+ X_max.T) + cvx.matmul(delta, Y_min.T- Y_max.T)
+    Q33 = -2 * cvx.matmul(cvx.matmul(X_min, D),cvx.transpose(X_max)) - 2 * cvx.matmul(cvx.matmul(Y_min, delta),cvx.transpose(Y_max))
 
     Q = cvx.bmat([[Q11, Q12, Q13], [cvx.transpose(Q12), Q22, Q23], [cvx.transpose(Q13), cvx.transpose(Q23), Q33]])
 
@@ -111,5 +133,3 @@ def solve(nn, x_min, x_max, y_label, target):
 
     print(problem.value, problem.solver_stats.solver_name, problem.solver_stats.solve_time)
     return problem.value
-
-
