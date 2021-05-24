@@ -1,27 +1,11 @@
+import time
+
 import cvxpy as cvx
 import numpy as np
 import gc
 
-def subsetMatrix(span1, span2, M):
-    res_input = np.meshgrid(span1, span2)
-    if span1 == span2:
-        res_1 = np.hstack(res_input[0])
-        res_1 = res_1.reshape(len(span2), len(span1))
-        return M[res_1, res_1]
-    else:
-        res_1 = np.hstack(res_input[0])
-        res_2 = np.hstack(res_input[1])
-        res_1 = res_1.reshape( len(span2), len(span1))
-        res_2 = res_2.reshape(len(span2), len(span1))
-    # all = []
-    # for index1, i in enumerate(res_1):
-    #     temp = []
-    #     for index2, j in enumerate(res_1[index1]):
-    #         temp.append(M[res_2[index1][index2], j])
-    #     all.append(temp)
-    # ret = cvx.bmat(all)
+from Utils import Utils
 
-        return M[res_1, res_2]
 
 def solve(nn, x_min, x_max, y_label, target):
     """
@@ -33,6 +17,7 @@ def solve(nn, x_min, x_max, y_label, target):
     :param target: test if the sample can be classified as the target label
     :return: worst-case attack of the sample
     """
+    prior = time.time()
 
     num_hidden_layers = len(nn.dims) - 2
     Y_min, Y_max, X_min, X_max = nn.interval_arithmetic(x_min, x_max, method = "SDR")
@@ -55,10 +40,10 @@ def solve(nn, x_min, x_max, y_label, target):
         input_linear = M[0, input_span]
         output_linear = M[0, output_span]
 
-        input_quadratic = subsetMatrix(input_span, input_span, M)
-        output_quadratic = subsetMatrix(output_span, output_span, M)
+        input_quadratic = Utils.subsetMatrix(input_span, input_span, M)
+        output_quadratic = Utils.subsetMatrix(output_span, output_span, M)
 
-        cross_terms = subsetMatrix(input_span, output_span, M)
+        cross_terms = Utils.subsetMatrix(input_span, output_span, M)
 
         constraints += [output_linear >= cvx.matmul(W_i, input_linear) + b_i]
         constraints += [output_linear >=0]
@@ -78,6 +63,7 @@ def solve(nn, x_min, x_max, y_label, target):
     y_final = cvx.transpose(M[0, np.arange(current_pos_matrix + 1, current_pos_matrix + nn.dims[-2] + 1)])
     obj = cvx.matmul(cvx.transpose(c), cvx.matmul(nn.weights[-1], y_final) + np.squeeze(nn.bias[-1]))
     problem = cvx.Problem(cvx.Minimize(-obj), constraints)
+    print('building time is', time.time() - prior)
     problem.solve(solver=cvx.MOSEK)
     print(-problem.value, problem.solver_stats.solver_name, problem.solver_stats.solve_time)
     gc.collect()

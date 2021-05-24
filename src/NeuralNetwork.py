@@ -95,7 +95,7 @@ class NeuralNetwork:
 
             return Y_min, Y_max, X_min, X_max
 
-        elif method == 'DeepSDP':
+        elif method == 'DeepSDP' or method == 'GlobalLip':
             X_min.append(x_min.T)
             X_max.append(x_max.T)
             for i in range(len(self.dims) - 2):

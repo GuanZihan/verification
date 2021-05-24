@@ -1,3 +1,5 @@
+import time
+
 import cvxpy as cvx
 import numpy as np
 import gc
@@ -14,6 +16,7 @@ def solve(nn, x_min, x_max, y_label, target):
     :return: worst-case attack of the sample
     """
 
+    prior = time.time()
     num_hidden_layers = len(nn.dims) - 2
     Y_min, Y_max, X_min, X_max = nn.interval_arithmetic(x_min, x_max, method="SDR")
     size_big_matrix = 1 + sum(nn.dims[: -1])
@@ -68,6 +71,7 @@ def solve(nn, x_min, x_max, y_label, target):
     y_final = M[0, np.arange(current_pos_matrix + 1, current_pos_matrix + nn.dims[-2] + 1)].T
     obj = cvx.matmul(c.T, cvx.matmul(nn.weights[-1], y_final) + np.squeeze(nn.bias[-1]))
     problem = cvx.Problem(cvx.Maximize(obj), constraints)
+    print('building time is', time.time() - prior)
     problem.solve(solver=cvx.MOSEK,  mosek_params={
             # 'optimizerMaxTime': self.timeout,
             'MSK_DPAR_OPTIMIZER_MAX_TIME': 50,
@@ -76,7 +80,9 @@ def solve(nn, x_min, x_max, y_label, target):
             # 'lowerObjCut': 0.,
             'MSK_DPAR_LOWER_OBJ_CUT': 0.,
         })
+
     print(problem.value, problem.solver_stats.solver_name, problem.solver_stats.solve_time)
     gc.collect()
+
 
     return problem.value

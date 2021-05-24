@@ -1,17 +1,17 @@
 import math
 import cvxpy as cvx
 import numpy as np
-import Utils
+from Utils import Utils
 
 
-def solve(nn, x_min, x_max, y_label, target, eps):
-    Y_min, Y_max, X_min, X_max = nn.interval_arithmetic(x_min, x_max, method="DeepSDP")
+def solve(nn, x_min, x_max):
+    # Y_min, Y_max, X_min, X_max = nn.interval_arithmetic(x_min, x_max, method="GlobalLip")
     num_neurons = sum(nn.dims[1: -1])
 
     # index for the three sets
-    Ip = np.where(Y_min > 0)[1]
-    In = np.where(Y_max < 0)[1]
-    Inp = np.setdiff1d(np.arange(num_neurons), np.union1d(Ip, In))
+    # Ip = np.where(Y_min > 0)[1]
+    # In = np.where(Y_max < 0)[1]
+    # Inp = np.setdiff1d(np.arange(num_neurons), np.union1d(Ip, In))
 
     L_sq = cvx.Variable(neg=False)
 
@@ -34,7 +34,6 @@ def solve(nn, x_min, x_max, y_label, target, eps):
     B = cvx.hstack([init_col, eyes])
 
     A_on_B = cvx.vstack([A, B])
-    a = A_on_B.shape
 
     weight_term = -1 * cvx.matmul(nn.weights[-1].T, nn.weights[-1])
     middle_zeros = np.zeros((sum(nn.dims[1: -2]), sum(nn.dims[1: -2])))

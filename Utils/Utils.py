@@ -3,6 +3,7 @@ import urllib.request
 import numpy as np
 import cvxpy as cvx
 
+
 def open_file(name, *open_args, **open_kwargs):
     """Load file, downloading to /tmp/jax_verify first if necessary."""
     local_root = '/tmp/jax_verify'
@@ -24,7 +25,7 @@ def constructblkDiagonal(data, dims):
     :return:
     """
     row_num = sum(dims[0: -1])
-    col_num = sum(dims[1: ])
+    col_num = sum(dims[1:])
     blk = []
     for i in range(len(data)):
         layer = []
@@ -40,3 +41,17 @@ def constructblkDiagonal(data, dims):
         blk.append(cvx.hstack(layer))
     return cvx.vstack(blk)
 
+
+def subsetMatrix(span1, span2, M):
+    res_input = np.meshgrid(span1, span2)
+    if span1 == span2:
+        res_1 = np.hstack(res_input[0])
+        res_1 = res_1.reshape(len(span2), len(span1))
+        return M[res_1, res_1]
+    else:
+        res_1 = np.hstack(res_input[0])
+        res_2 = np.hstack(res_input[1])
+        res_1 = res_1.reshape(len(span2), len(span1))
+        res_2 = res_2.reshape(len(span2), len(span1))
+
+        return M[res_1, res_2]

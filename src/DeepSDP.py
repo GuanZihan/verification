@@ -1,6 +1,7 @@
 import cvxpy as cvx
 import numpy as np
-import Utils
+from Utils import Utils
+import time
 
 def solve(nn, x_min, x_max, y_label, target):
     """
@@ -12,6 +13,7 @@ def solve(nn, x_min, x_max, y_label, target):
     :param target: test if the sample can be classified as the target label
     :return: worst-case attack of the sample
     """
+    prior = time.time()
     Y_min, Y_max, X_min, X_max = nn.interval_arithmetic(x_min, x_max, method="DeepSDP")
     num_neurons = sum(nn.dims[1: -1])
     dim_in = nn.dims[0]
@@ -83,6 +85,7 @@ def solve(nn, x_min, x_max, y_label, target):
     # solve
     constraints += [Min + M_out + M_mid << 0]
     problem = cvx.Problem(cvx.Minimize(b), constraints)
+    print('building time is', time.time() - prior)
     problem.solve(solver=cvx.MOSEK)
 
     print(problem.value, problem.solver_stats.solver_name, problem.solver_stats.solve_time)

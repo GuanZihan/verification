@@ -2,18 +2,20 @@ import scipy.io
 import tensorflow as tf
 import numpy as np
 
-from src import GlobalLip, DeepSDP, DeepSDP_plus, SDR, SDR_old
+from src import GlobalLip, DeepSDP, DeepSDP_plus, SDR, SDR_old, LocalLip
 import matplotlib.pyplot as plt
 
 from cvxpy import *
 from src.NeuralNetwork import NeuralNetwork
+
+import time
 
 # load data from tensorflow
 (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
 # epsilon
 eps = 0.5
 # dimension of the neural network
-dims = [2, 10, 30, 20, 2]
+dims = [70, 10, 2]
 # initialize the nueral network
 nn = NeuralNetwork(dims)
 
@@ -40,17 +42,16 @@ if __name__ == '__main__':
         X = []
         y = []
 
-        data = scipy.io.loadmat("data/random_weights.mat")
-        nn.weights = data['weights'][0]
+        # data = scipy.io.loadmat("data/random_weights.mat")
+        # nn.weights = data['weights'][0]
 
-
-        print("===========DeepSDP_plus=========+")
-        for i in range(0, dims[-1]):
-            if i != sample_label:
-                X.append(i)
-                y.append(DeepSDP_plus.solve(nn, x_min, x_max, sample_label, i))
-        plt.plot(X, y, color = 'red')
-        y = []
+        # print("===========DeepSDP_plus=========+")
+        # for i in range(0, dims[-1]):
+        #     if i != sample_label:
+        #         X.append(i)
+        #         y.append(DeepSDP_plus.solve(nn, x_min, x_max, sample_label, i))
+        # plt.plot(X, y, color='red')
+        # y = []
 
         # DeepSDP Method
         print("=============DeepSDP=============")
@@ -58,7 +59,6 @@ if __name__ == '__main__':
             if i != sample_label:
                 y.append(DeepSDP.solve(nn, x_min, x_max, sample_label, i))
         # plt.plot(X, y, color='blue')
-        print(y)
         y = []
 
         # SDR Method
@@ -73,13 +73,20 @@ if __name__ == '__main__':
             if i != sample_label:
                 y.append(SDR_old.solve(nn, x_min, x_max, sample_label, i))
 
-        # Lip Method
-        print("===============GlobalLip===============")
+        # # Lip Method
+        # print("===============GlobalLip===============")
+        #
+        # for i in range(0, dims[-1]):
+        #     if i != sample_label:
+        #         y.append(GlobalLip.solve(nn, x_min, x_max))
+        #
+        # # Lip Method
+        # print("===============GlobalLip===============")
+        #
+        # for i in range(0, dims[-1]):
+        #     if i != sample_label:
+        #         y.append(LocalLip.solve(nn, x_min, x_max,  sample_label, i))
 
-        for i in range(0, dims[-1]):
-            if i != sample_label:
-                y.append(GlobalLip.solve(nn, x_min, x_max, sample_label, i, eps))
-
-        plt.legend(['plus', 'DeepSDP', 'SDR'])
-        plt.show()
+        plt.legend(['plus', 'DeepSDP', 'SDR', 'Global_Lip'])
+        # plt.show()
         break
