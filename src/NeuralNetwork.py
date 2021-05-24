@@ -31,8 +31,9 @@ class NeuralNetwork:
         model = Sequential([
                 Dense(self.dims[1], activation='relu', input_shape=(784,))
             ])
-        for i in self.dims[1 : -1]:
-            model.add(Dense(i, activation= "relu"))
+        if len(self.dims) >= 4:
+            for i in self.dims[2 : -1]:
+                model.add(Dense(i, activation= "relu"))
         model.add(Dense(self.dims[-1], activation="softmax"))
         model.compile(optimizer='adam',
                           loss='sparse_categorical_crossentropy',

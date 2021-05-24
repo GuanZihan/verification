@@ -78,7 +78,7 @@ def solve(nn, x_min, x_max, y_label, target):
     y_final = cvx.transpose(M[0, np.arange(current_pos_matrix + 1, current_pos_matrix + nn.dims[-2] + 1)])
     obj = cvx.matmul(cvx.transpose(c), cvx.matmul(nn.weights[-1], y_final) + np.squeeze(nn.bias[-1]))
     problem = cvx.Problem(cvx.Minimize(-obj), constraints)
-    problem.solve()
+    problem.solve(solver=cvx.MOSEK)
     print(-problem.value, problem.solver_stats.solver_name, problem.solver_stats.solve_time)
     gc.collect()
 
