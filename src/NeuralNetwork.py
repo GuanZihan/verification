@@ -46,7 +46,7 @@ class NeuralNetwork:
         if cache:
             self.model.load_weights(self.checkpoint_path)
         else:
-            self.model.fit(x=train_images,y=train_labels, epochs=2, callbacks=[self.cp_callback])
+            self.model.fit(x=train_images,y=train_labels, epochs=3, callbacks=[self.cp_callback])
             self.model.load_weights(self.checkpoint_path)
 
     def read_weights(self):
