@@ -1,4 +1,6 @@
 import numpy as np
+
+
 def read_nn(file_name):
     with open(file_name, "r") as f:
         line = f.readline()
