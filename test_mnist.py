@@ -1,6 +1,7 @@
 import scipy.io
 import tensorflow as tf
 import numpy as np
+import Utils.Read_ACAS as read_util
 
 from src import GlobalLip, DeepSDP, DeepSDP_plus, SDR, SDR_old, LocalLip
 import matplotlib.pyplot as plt
@@ -8,14 +9,15 @@ import matplotlib.pyplot as plt
 from cvxpy import *
 from src.NeuralNetwork import NeuralNetwork
 
-import time
-
 # load data from tensorflow
 (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
 # epsilon
 eps = 0.5
 # dimension of the neural network
-dims = [70, 10, 2]
+# dims = [70, 10, 2]
+dims, weights, bias, x_min, x_max = read_util.read_nn("ACASXU_experimental_v2a_1_1.nnet")
+x_min = np.expand_dims(x_min, axis=1)
+x_max = np.expand_dims(x_max, axis=1)
 # initialize the nueral network
 nn = NeuralNetwork(dims)
 
@@ -23,7 +25,7 @@ nn = NeuralNetwork(dims)
 # nn.read_weights()
 
 # generate the network randomly
-nn.generateRandomWeights()
+# nn.generateRandomWeights()
 
 # total number of neurons in the hidden layers
 num_neurons = sum(dims[1:-1])
@@ -33,11 +35,15 @@ if __name__ == '__main__':
         # sample_image = test_images[i] / 255
         # sample_label = test_labels[i]
         # xc_in = sample_image.reshape((784, 1))
-        np.random.seed(i)
+        # np.random.seed(i)
         xc_in = np.random.rand(dims[0], 1)
-        sample_label = np.random.randint(0, dims[-1])
-        x_min = xc_in - eps
-        x_max = xc_in + eps
+        # sample_label = np.random.randint(0, dims[-1])
+        # x_min = xc_in - eps
+        # x_max = xc_in + eps
+        nn.weights = weights
+        nn.bias = bias
+        sample_label = 1
+
 
         X = []
         y = []

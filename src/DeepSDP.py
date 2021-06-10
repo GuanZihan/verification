@@ -65,9 +65,9 @@ def solve(nn, x_min, x_max, y_label, target):
 
     Q = cvx.bmat([[Q11, Q12, Q13], [Q12.T, Q22, Q23], [Q13.T, Q23.T, Q33]])
 
-    Utils.constructblkDiagonal(np.array(nn.weights, dtype=object), nn.dims)
+    # Utils.constructblkDiagonal(np.array(nn.weights, dtype=object), nn.dims)
 
-    A = cvx.hstack([Utils.constructblkDiagonal(np.array(nn.weights[0: -1]), nn.dims), np.zeros((num_neurons, dim_last_hidden))])
+    A = cvx.hstack([Utils.constructblkDiagonal(nn.weights[0: -1], nn.dims), np.zeros((num_neurons, dim_last_hidden))])
     B = cvx.hstack([np.zeros((num_neurons, dim_in)), np.eye(num_neurons)])
     bb = cvx.vstack(nn.bias[0: -1])
     CM_mid = cvx.bmat([[A, bb], [B, np.zeros((B.shape[0], 1))], [np.zeros((1, B.shape[1])), np.array([[1]])]])
@@ -86,7 +86,8 @@ def solve(nn, x_min, x_max, y_label, target):
     constraints += [Min + M_out + M_mid << 0]
     problem = cvx.Problem(cvx.Minimize(b), constraints)
     print('building time is', time.time() - prior)
-    problem.solve(solver=cvx.MOSEK)
+    print(cvx.installed_solvers())
+    problem.solve(solver=cvx.CVXOPT)
 
     print(problem.value, problem.solver_stats.solver_name, problem.solver_stats.solve_time)
     return problem.value
