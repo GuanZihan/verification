@@ -65,8 +65,8 @@ def solve(nn, x_min, x_max, y_label, target):
         current_pos_matrix = current_pos_matrix + nn.dims[i]
 
     c = np.zeros((nn.dims[-1], 1))
-    c[y_label] = -1
-    c[target] = 1
+    c[y_label] = 1
+    # c[target] = 1
 
     y_final = M[0, np.arange(current_pos_matrix + 1, current_pos_matrix + nn.dims[-2] + 1)].T
     obj = cvx.matmul(c.T, cvx.matmul(nn.weights[-1], y_final) + np.squeeze(nn.bias[-1]))

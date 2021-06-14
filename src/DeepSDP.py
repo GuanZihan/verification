@@ -74,8 +74,8 @@ def solve(nn, x_min, x_max, y_label, target):
     M_mid = cvx.matmul(cvx.matmul(CM_mid.T, Q), CM_mid)
     # M_out
     c = np.zeros((dim_out, 1))
-    c[y_label] = -1
-    c[target] = 1
+    c[y_label] = 1
+    # c[target] = 1
 
     b = cvx.Variable((1,1))
     S = cvx.bmat([[np.zeros((dim_out, dim_out)), c], [c.T, -2 * b]])
@@ -87,7 +87,7 @@ def solve(nn, x_min, x_max, y_label, target):
     problem = cvx.Problem(cvx.Minimize(b), constraints)
     print('building time is', time.time() - prior)
     print(cvx.installed_solvers())
-    problem.solve(solver=cvx.CVXOPT)
+    problem.solve(solver=cvx.MOSEK)
 
     print(problem.value, problem.solver_stats.solver_name, problem.solver_stats.solve_time)
     return problem.value
