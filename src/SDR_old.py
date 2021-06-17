@@ -4,7 +4,7 @@ import cvxpy as cvx
 import numpy as np
 import gc
 
-from Utils import Utils
+import Utils
 
 
 def solve(nn, x_min, x_max, y_label, target):

@@ -1,8 +1,8 @@
 import matlab.engine
 import numpy as np
-import Utils.Utils as util
-import matplotlib.pyplot as plt
-from src.NeuralNetwork import NeuralNetwork
+import Utils as util
+
+
 # from tensorflow.keras import datasets
 
 # (train_images, train_labels), (test_images, test_labels) = datasets.mnist.load_data()

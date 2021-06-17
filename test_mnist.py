@@ -1,9 +1,7 @@
-import scipy.io
 import tensorflow as tf
 import numpy as np
-import Utils.Utils as util
 
-from src import GlobalLip, DeepSDP, DeepSDP_plus, SDR, SDR_old, LocalLip
+from src import DeepSDP, SDR, SDR_old
 import matplotlib.pyplot as plt
 
 from cvxpy import *

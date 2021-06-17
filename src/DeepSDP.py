@@ -1,6 +1,6 @@
 import cvxpy as cvx
 import numpy as np
-from Utils import Utils
+import Utils
 import time
 
 def solve(nn, x_min, x_max, y_label, target):

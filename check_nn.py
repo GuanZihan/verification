@@ -1,4 +1,4 @@
-import Utils.Utils as util
+import Utils as util
 from src.NeuralNetwork import NeuralNetwork
 from tensorflow.keras import datasets
 import numpy as np
