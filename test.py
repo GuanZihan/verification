@@ -61,15 +61,15 @@ def test(eps, file_path=""):
     eng.addpath(r'matlab')
 
     # save weights and bias
-    util.write_single_data_to_matlab_path('matlab/weights.mat', "weights", weights)
-    util.write_single_data_to_matlab_path('matlab/ias.mat', 'bias', bias)
+    util.write_single_data_to_matlab_path('/matlab/weights.mat', "weights", weights)
+    util.write_single_data_to_matlab_path('/matlab/ias.mat', 'bias', bias)
 
     solved_primal = 0
     solved_dual = 0
     # for every samples
     for i in range(1):
         # sample_image = test_images[i] / 255
-        sample_image = load_training_data("Dataset/MNIST/MNISTlabel_0_index_2_.npy")
+        sample_image = load_training_data("/Dataset/MNIST/MNISTlabel_0_index_2_.npy")
         sample_image = sample_image.reshape((784, 1))
         # plt.imshow(sample_image, cmap='Greys')
         # plt.show()
@@ -80,7 +80,7 @@ def test(eps, file_path=""):
         # sample_image = util.read_sample("Dataset/AutoTaxi/AutoTaxi_ExampleImage.npy")
 
         # save sample
-        util.write_single_data_to_matlab_path('matlab/sample.mat', 'input', sample_image)
+        util.write_single_data_to_matlab_path('/matlab/sample.mat', 'input', sample_image)
 
         # convert dims to a matlab.double data structure
         dims_double = matlab.double(dims)
