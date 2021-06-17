@@ -1,0 +1,4 @@
+{'model_name': [10, 20, 10], 'Primal': matlab.double([[-1.4180400035304286,11.162217343751541]]), 'Primal_time': matlab.double([[0.0623342,0.0393344]]), 'Dual': matlab.double([[-1.4181095461374362,11.162157474242433]]), 'Dual_time': matlab.double([[0.0256344,0.0226932]]), 'status_primal': 0.0, 'status_dual': 0.0}
+{'model_name': [10, 20, 10], 'Primal': matlab.double([[-1.970180525192174,4.172807578475163]]), 'Primal_time': matlab.double([[0.0348693,0.0307312]]), 'Dual': matlab.double([[-1.9702485902814226,4.172724895513053]]), 'Dual_time': matlab.double([[0.0170458,0.0206527]]), 'status_primal': 0.0, 'status_dual': 0.0}
+primal solved number: 0
+Dual solved number: 0

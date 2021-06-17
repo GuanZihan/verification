@@ -128,7 +128,8 @@ class NeuralNetwork:
             y = np.matmul(weights_i, x) + self.bias[i]
             x = self.relu(y)
         final = np.matmul(self.weights[-1], x) + self.bias[-1]
-        print(final, self.softmax(final))
+        score = self.softmax(final)
+        return score, np.argmax(score)
 
 
     def relu(self, x):
