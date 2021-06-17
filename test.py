@@ -22,22 +22,22 @@ def test(eps, file_path=""):
     :return:
     """
     # ===================
-    weights = 0
-    bias = 0
-    with util.open_file("models/raghunathan18_pgdnn.pkl", 'rb') as f:
-        file = np.load(f, allow_pickle=True)
-        W = []
-        b = []
-        for layer in file:
-            W.append(layer[0].T)
-            b.append(np.expand_dims(layer[1], axis=1))
-        weights = W
-        bias = b
-    dims = [784, 200, 100, 50, 10]
+    # weights = 0
+    # bias = 0
+    # with util.open_file("models/raghunathan18_pgdnn.pkl", 'rb') as f:
+    #     file = np.load(f, allow_pickle=True)
+    #     W = []
+    #     b = []
+    #     for layer in file:
+    #         W.append(layer[0].T)
+    #         b.append(np.expand_dims(layer[1], axis=1))
+    #     weights = W
+    #     bias = b
+    # dims = [784, 200, 100, 50, 10]
     # =====================
 
     # 0. for reading nnet file
-    # dims, weights, bias, x_min, x_max = util.read_nn(file_path)
+    dims, weights, bias, x_min, x_max = util.read_nn(file_path)
     # dims = [784, 200, 100, 50, 10]
     # dims = file_path
     # dims = file_path
