@@ -61,6 +61,7 @@ def test(eps, file_path=""):
     eng.addpath(r'matlab')
 
     # save weights and bias
+    print(weights.shape)
     util.write_single_data_to_matlab_path('/matlab/weights.mat', "weights", weights)
     util.write_single_data_to_matlab_path('/matlab/ias.mat', 'bias', bias)
 
