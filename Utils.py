@@ -99,7 +99,7 @@ def read_nn(file_name):
         return dims, weights, bias, input_min, input_max
 
 
-def write_single_data_to_matlab_path(filename, key: str, data):
+def write_single_data_to_matlab_path(filename, key, data):
     """
     write data to the matlab path by indicating key and data
     :param filename: the filename
@@ -111,7 +111,7 @@ def write_single_data_to_matlab_path(filename, key: str, data):
     return scio.savemat(file_name=filename, mdict={key: data})
 
 
-def write_dict_to_matlab_path(filename, dictionary: dict):
+def write_dict_to_matlab_path(filename, dictionary):
     """
 
     :param filename:
