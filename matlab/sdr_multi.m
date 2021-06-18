@@ -97,9 +97,9 @@ dim_final = dims(end-1);
 y_final = M(1, 1 + current_pos_matrix: current_pos_matrix + dim_final).';
 
 c = zeros(dim_out,1);
-c(label) = -1;
-c(target) = 1;
-% c(label) = 1;
+%c(label) = -1;
+%c(target) = 1;
+c(label) = 1;
 obj = c.'*(weights{end}*y_final + biases{end});
 disp("Solving problem -- SDR")
 out = optimize(constraints, -obj,sdpsettings('solver',solver,'verbose',verbose,'dualize', 1, 'mosek.MSK_IPAR_BI_IGNORE_MAX_ITER', 1, 'mosek.MSK_IPAR_BI_IGNORE_NUM_ERROR', 1));

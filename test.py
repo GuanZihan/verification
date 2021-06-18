@@ -1,17 +1,12 @@
 import matlab.engine
 import numpy as np
 import Utils as util
-
-
+import matplotlib.pyplot as plt
+import os
+from src.NeuralNetwork import NeuralNetwork
 # from tensorflow.keras import datasets
 
 # (train_images, train_labels), (test_images, test_labels) = datasets.mnist.load_data()
-
-
-def load_training_data(file_path):
-    X = np.load(file_path)
-    X_norm = X.reshape(784, 1)
-    return X_norm
 
 
 def test(eps, file_path=""):
@@ -43,7 +38,9 @@ def test(eps, file_path=""):
     # dims = file_path
     print("model: ", file_path)
     print("dims: ", dims)
-    # nn = NeuralNetwork(dims)
+    nn = NeuralNetwork(dims)
+    nn.weights = weights
+    nn.bias = bias
     # 1. for aditi load_weights
     # nn.load_weights()
 
@@ -61,18 +58,22 @@ def test(eps, file_path=""):
     eng.addpath(r'matlab')
 
     # save weights and bias
-    print(weights.shape)
-    util.write_single_data_to_matlab_path('', "weights", weights)
+    util.write_single_data_to_matlab_path('./matlab/weights.mat', "weights", weights)
     util.write_single_data_to_matlab_path('./matlab/ias.mat', 'bias', bias)
 
     solved_primal = 0
     solved_dual = 0
     # for every samples
-    for i in range(1):
+    sample_file_path = []
+    for root,dirs,files in os.walk("./Dataset/AutoTaxi/"):
+        sample_file_path = files
+    for i in sample_file_path:
         # sample_image = test_images[i] / 255
-        sample_image = load_training_data("./Dataset/MNIST/MNISTlabel_0_index_2_.npy")
-        sample_image = sample_image.reshape((784, 1))
-        # plt.imshow(sample_image, cmap='Greys')
+        sample_image = util.read_sample("./Dataset/AutoTaxi/" + i)
+        # sample_image = sample_image.reshape((-1, 1))
+        # print(sample_image)
+        # break
+        # plt.imshow(sample_image)
         # plt.show()
 
         # generate a random sample
@@ -93,12 +94,15 @@ def test(eps, file_path=""):
         # sample_label = test_labels.tolist()[i]
 
         sample_label = 0
+        pred = nn.predict_manual_taxi(sample_image)
 
         # SDR
-        res_primal = eng.test_mnist(eps, 1, dims_double, sample_label + 1, 1, nargout=3)
+        res_primal = eng.test_auto_taxi(eps, float(pred[0][0]), dims_double, sample_label + 1, 1, nargout=3)
 
         # DeepSDP
-        res_dual = eng.test_mnist(eps, 1, dims_double, sample_label + 1, 2, nargout=3)
+        res_dual = eng.test_auto_taxi(eps, float(pred[0][0]), dims_double, sample_label + 1, 2, nargout=3)
+
+        print("original value: ", pred[0], end="\n\n")
 
         if res_primal[2] == 1.0:
             solved_primal += 1

@@ -123,13 +123,19 @@ class NeuralNetwork:
         pred = self.model.predict(x.reshape(-1,784))
         return np.argmax(pred), pred
 
-    def predict_manual(self, x):
+    def predict_manual_mnist(self, x):
         for i, weights_i in enumerate(self.weights[:-1]):
             y = np.matmul(weights_i, x) + self.bias[i]
             x = self.relu(y)
         final = np.matmul(self.weights[-1], x) + self.bias[-1]
         score = self.softmax(final)
         return score, np.argmax(score)
+
+    def predict_manual_taxi(self, x):
+        for i, weights_i in enumerate(self.weights[:]):
+            y = np.matmul(weights_i, x) + self.bias[i]
+            x = self.relu(y)
+        return x
 
 
     def relu(self, x):

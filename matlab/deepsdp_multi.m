@@ -210,9 +210,9 @@ end
 obj = b;
 
 c = zeros(dim_out,1);
-c(label) = -1;
-c(repeated) = 1;
-% c(label) = 1;
+%c(label) = -1;
+%c(repeated) = 1;
+c(label) = 1;
 S = [zeros(dim_out,dim_out) c;c' -2*b];
 tmp = ([zeros(dim_out,dim_in+num_neurons-dim_last_hidden) weights{end} biases{end};zeros(1,dim_in+num_neurons) 1]);
 Mout = tmp.'*S*tmp;
