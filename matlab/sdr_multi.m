@@ -40,12 +40,21 @@ for k=1:num_layers+1
     end
 end
 
-%% define descision variables
-
 num_hidden_layers = length(dims)-2;
 
-size_big_matrix = 1 + sum(dims(1:end-1));
+% for i = 1: num_hidden_layers
+%     In_i = find(x_max{i + 1} <= 0);
+%     cp_In_i = setdiff(1: dims(i + 1),In_i);
+%     weights{i} = weights{i}(cp_In_i, :);
+%     weights{i + 1} = weights{i + 1}(:, cp_In_i);
+%     biases{i} = biases{i}(cp_In_i);
+%     x_min{i + 1} = x_min{i +1}(cp_In_i);
+%     x_max{i + 1} = x_max{i +1}(cp_In_i);
+%     dims(i + 1) = dims(i + 1) - length(In_i);
+% end
 
+%% define descision variables
+size_big_matrix = 1 + sum(dims(1:end-1));
 M = sdpvar(size_big_matrix, size_big_matrix,'symmetric');
 constraints = [M >=0, M(1, 1) == 1];
 x = M(1, 2: 1+dims(1)).';
@@ -55,7 +64,7 @@ X = M(2: 1 + dims(1), 2: 1 + dims(1));
 constraints = [constraints, x>=x_min{1}];
 constraints = [constraints, x<=x_max{1}];
 constraints = [constraints, (diag(X) - (x_min{1} + x_max{1}).*x ...
-+ x_min{1}.*x_max{1} <= 1E-5)];
++ x_min{1}.*x_max{1} <= 0)];
 
 current_pos_matrix = 1;
 
@@ -78,16 +87,17 @@ for i = 1:num_hidden_layers
     constraints = [constraints, output_linear >=0];
     % ReLU quadratic constraints 
     temp_matrix = W_i*cross_terms; 
+    disp(size(output_quadratic));
     constraints = [constraints, diag(output_quadratic) == diag(temp_matrix) + output_linear.*b_i, diag(output_quadratic) >= 0, diag(input_quadratic)>=0];
     
     % layerwise constraints 
     constraints = [constraints, (diag(output_quadratic) - (x_min{i+1} + x_max{i+1}).*output_linear ...
-				 + x_min{i+1}.*x_max{i+1} <= 1E-5)];
+				 + x_min{i+1}.*x_max{i+1} <= 0)];
     
     current_pos_matrix = current_pos_matrix + dims(i);
 
     
-    constraints = [constraints, diag(output_quadratic) - diag(temp_matrix) - b_i.*output_linear - x_min{i+1}.*output_linear + (W_i*input_linear).*x_min{i+1} + x_min{i+1}.*b_i<=1E-5]; 
+    constraints = [constraints, diag(output_quadratic) - diag(temp_matrix) - b_i.*output_linear - x_min{i+1}.*output_linear + (W_i*input_linear).*x_min{i+1} + x_min{i+1}.*b_i<=0];
     
 
 end
@@ -97,14 +107,23 @@ dim_final = dims(end-1);
 y_final = M(1, 1 + current_pos_matrix: current_pos_matrix + dim_final).';
 
 c = zeros(dim_out,1);
-%c(label) = -1;
-%c(target) = 1;
-c(label) = 1;
+% c(label) = -1;
+% c(target) = 1;
+if label == 1
+   c(1) = 1;
+end
+if label == 2
+   c(1) = -1;
+end
+
 obj = c.'*(weights{end}*y_final + biases{end});
 disp("Solving problem -- SDR")
 out = optimize(constraints, -obj,sdpsettings('solver',solver,'verbose',verbose,'dualize', 1, 'mosek.MSK_IPAR_BI_IGNORE_MAX_ITER', 1, 'mosek.MSK_IPAR_BI_IGNORE_NUM_ERROR', 1));
 
 bound = value(obj);
+if label == 2
+       bound = -bound;
+end
 %out_op = value(M(1,:))';
 %save("optimal.mat","out_op");
 % disp(value(M));

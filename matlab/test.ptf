@@ -1,0 +1,21 @@
+Task ''
+    Written by MOSEK v9.2.40
+    problemtype: Conic Problem
+    numvar:    0
+    numcon:    2
+    numbarvar: 2
+    numanz:    0
+Objective ''
+    Minimize + <M0;@X0> + <M1;@X1>
+Constraints
+    [2.3e+1] + <M2;@X0> + <M3;@X1>
+    [-inf;-3] + <M4;@X1>
+Variables
+    @X0 [PSD(3)]
+    @X1 [PSD(4)]
+SymmetricMatrixes
+    M0 SYMMAT(3) (0,0,1) (2,2,6)
+    M1 SYMMAT(4) (0,0,1) (1,0,-3) (1,1,2) (2,2,1)
+    M2 SYMMAT(3) (0,0,1) (2,0,1) (2,2,2)
+    M3 SYMMAT(4) (1,0,1) (1,1,-1) (3,3,-3)
+    M4 SYMMAT(4) (1,0,5e-1)

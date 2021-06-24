@@ -5,7 +5,7 @@ import numpy as np
 import matlab.engine
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Dropout, Flatten, MaxPooling2D
-
+from sklearn import datasets
 
 def load_data():
     (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
@@ -45,13 +45,18 @@ class NeuralNetwork:
                       metrics=['accuracy'])
         self.model = model
 
-    def train(self, cache):
-        train_images, train_labels, test_images, test_labels = load_data()
+    def train(self, cache, mode):
+        if mode == 1:
+            train_images, train_labels, test_images, test_labels = load_data()
+        if mode == 2:
+            train_images = datasets.load_iris()['data']
+            train_labels = datasets.load_iris()['target']
         self.create_model()
+        print(train_images.shape)
         if cache:
             self.model.load_weights(self.checkpoint_path)
         else:
-            self.model.fit(x=train_images, y=train_labels, epochs=3, callbacks=[self.cp_callback])
+            self.model.fit(x=train_images, y=train_labels, epochs=50, callbacks=[self.cp_callback])
             self.model.load_weights(self.checkpoint_path)
 
     def load_weights(self):
@@ -120,7 +125,7 @@ class NeuralNetwork:
         return f_x
 
     def predict(self, x):
-        pred = self.model.predict(x.reshape(-1,784))
+        pred = self.model.predict(x.reshape(-1, self.dims[0]))
         return np.argmax(pred), pred
 
     def predict_manual_mnist(self, x):

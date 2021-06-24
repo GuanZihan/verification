@@ -1,10 +1,10 @@
 import matlab.engine
 import numpy as np
-import Utils as util
+import Utils.Utils as util
 import matplotlib.pyplot as plt
 import os
 from src.NeuralNetwork import NeuralNetwork
-# from tensorflow.keras import datasets
+from tensorflow.keras import datasets
 
 # (train_images, train_labels), (test_images, test_labels) = datasets.mnist.load_data()
 
@@ -63,6 +63,7 @@ def test(eps, file_path=""):
 
     solved_primal = 0
     solved_dual = 0
+    solved_plus = 0
     # for every samples
     sample_file_path = []
     for root,dirs,files in os.walk("./Dataset/AutoTaxi/"):
@@ -102,6 +103,9 @@ def test(eps, file_path=""):
         # DeepSDP
         res_dual = eng.test_auto_taxi(eps, float(pred[0][0]), dims_double, sample_label + 1, 2, nargout=3)
 
+        # Deeplus
+        res_plus = eng.test_auto_taxi(eps, float(pred[0][0]), dims_double, sample_label + 1, 3, nargout=3)
+
         print("original value: ", pred[0], end="\n\n")
 
         if res_primal[2] == 1.0:
@@ -109,6 +113,9 @@ def test(eps, file_path=""):
 
         if res_dual[2] == 1.0:
             solved_dual += 1
+
+        if res_plus[2] == 1.0:
+            solved_plus += 1
 
         # a = scio.loadmat("D:\WORK_SPACE\DeepSDP\DeepSDP\optimal.mat")
         # pre = a["out_op"][1: 785]
@@ -126,6 +133,10 @@ def test(eps, file_path=""):
             "Dual_time": res_dual[1],
             "status_primal": res_primal[2],
             "status_dual": res_dual[2],
+            "res_plus": res_plus[0],
+            "res_plus_time": res_plus[1],
+            "status_res_plus": res_plus[2],
+            "pred": pred[0],
         }
 
         with open(str(file_path) + "_log.txt", "a+") as f:
@@ -136,4 +147,6 @@ def test(eps, file_path=""):
         f.write("primal solved number: " + str(solved_primal))
         f.write("\n")
         f.write("Dual solved number: " + str(solved_dual))
+        f.write("\n")
+        f.write("Plus solved number: " + str(solved_plus))
         f.write("\n")
