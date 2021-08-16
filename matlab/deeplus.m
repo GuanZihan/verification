@@ -1,14 +1,5 @@
 function [bound, time,status] =  deeplus(net,x_min,x_max,label,target,options)
 
-% Author: Mahyar Fazlyab
-% email: fazlyabmahyar@gmail.com, mahyarfa@seas.upenn.edu
-% Website: http://www.seas.upenn.edu/~mahyarfa
-% May 2020; Last revision: 12-May-2020
-version = '1.0';
-
-%%------------- BEGIN CODE --------------
-
-
 if(isempty(options.language))
     language = 'cvx';
 end
