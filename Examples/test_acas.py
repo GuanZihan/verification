@@ -1,14 +1,12 @@
 import matlab.engine
 import numpy as np
 import Utils.Utils as util
-import matplotlib.pyplot as plt
 import os
 from src.NeuralNetwork import NeuralNetwork
-from tensorflow.keras import datasets
-
-# (train_images, train_labels), (test_images, test_labels) = datasets.mnist.load_data()
+from numba import jit
 
 
+@jit(nopython=True)
 def test(eps, file_path=""):
     """
     test
@@ -16,61 +14,49 @@ def test(eps, file_path=""):
     :param file_path:
     :return:
     """
-    # ===================
-    # weights = 0
-    # bias = 0
-    # with util.open_file("models/raghunathan18_pgdnn.pkl", 'rb') as f:
-    #     file = np.load(f, allow_pickle=True)
-    #     W = []
-    #     b = []
-    #     for layer in file:
-    #         W.append(layer[0].T)
-    #         b.append(np.expand_dims(layer[1], axis=1))
-    #     weights = W
-    #     bias = b
-    # dims = [784, 200, 100, 50, 10]
-    # =====================
 
     # 0. for reading nnet file
     dims, weights, bias, x_min, x_max = util.read_nn(file_path)
-    # dims = [784, 200, 100, 50, 10]
-    # dims = file_path
-    # dims = file_path
     print("model: ", file_path)
     print("dims: ", dims)
     nn = NeuralNetwork(dims)
-    nn.weights = weights
-    nn.bias = bias
     # 1. for aditi load_weights
     # nn.load_weights()
 
     # 2. for training
-    # nn.train(cache=False)
+    # nn.train(cache=False, mode=2)
     # nn.read_weights()
 
     # 3. for random NN
     # nn.train(cache=True)
     # nn.generateRandomWeights()
 
+    # 4. for adding weights and bias to the instance
+    nn.weights = weights
+    nn.bias = bias
+    nn.dims = dims
+
     # start matlab
     eng = matlab.engine.start_matlab()
     eng.cd(r"matlab")
-    eng.addpath(r'matlab')
 
     # save weights and bias
-    util.write_single_data_to_matlab_path('./matlab/weights.mat', "weights", weights)
-    util.write_single_data_to_matlab_path('./matlab/ias.mat', 'bias', bias)
+    util.write_single_data_to_matlab_path('../matlab/weights.mat', "weights", nn.weights)
+    util.write_single_data_to_matlab_path('../matlab/ias.mat', 'bias', nn.bias)
 
     solved_primal = 0
     solved_dual = 0
     solved_plus = 0
-    # for every samples
-    sample_file_path = []
-    for root,dirs,files in os.walk("./Dataset/AutoTaxi/"):
-        sample_file_path = files
-    for i in sample_file_path:
+
+    # for root,dirs,files in os.walk("./Dataset/"):
+    #     sample_file_path = files
+
+    for i in range(1):
         # sample_image = test_images[i] / 255
-        sample_image = util.read_sample("./Dataset/AutoTaxi/" + i)
+        # np.random.seed(i)
+        # sample_image = np.random.rand(dims[0], 1) / 10
+        sample_image = np.array([[0.64, -0.2, -0.2, 0.47, -0.47]]).T
+
         # sample_image = sample_image.reshape((-1, 1))
         # print(sample_image)
         # break
@@ -83,30 +69,24 @@ def test(eps, file_path=""):
         # sample_image = util.read_sample("Dataset/AutoTaxi/AutoTaxi_ExampleImage.npy")
 
         # save sample
-        util.write_single_data_to_matlab_path('./matlab/sample.mat', 'input', sample_image)
+        util.write_single_data_to_matlab_path('../matlab/sample.mat', 'input', sample_image)
 
         # convert dims to a matlab.double data structure
         dims_double = matlab.double(dims)
 
         # sample_image = matlab.double(sample_image.T.tolist())
-        # sample_label = 3
 
-        # Tensorflow dataset
-        # sample_label = test_labels.tolist()[i]
-
-        sample_label = 0
-        pred = nn.predict_manual_taxi(sample_image)
+        pred = nn.predict_manual_mnist(sample_image)
+        sample_label = int(pred[1])
 
         # SDR
-        res_primal = eng.test_auto_taxi(eps, float(pred[0][0]), dims_double, sample_label + 1, 1, nargout=3)
+        res_primal = eng.test_acas(eps, 1, dims_double, sample_label + 1, 1, nargout=3)
 
         # DeepSDP
-        res_dual = eng.test_auto_taxi(eps, float(pred[0][0]), dims_double, sample_label + 1, 2, nargout=3)
+        res_dual = eng.test_acas(eps, 1, dims_double, sample_label + 1, 2, nargout=3)
 
         # Deeplus
-        res_plus = eng.test_auto_taxi(eps, float(pred[0][0]), dims_double, sample_label + 1, 3, nargout=3)
-
-        print("original value: ", pred[0], end="\n\n")
+        res_plus = eng.test_acas(eps, 1, dims_double, sample_label + 1, 3, nargout=3)
 
         if res_primal[2] == 1.0:
             solved_primal += 1
@@ -136,7 +116,6 @@ def test(eps, file_path=""):
             "res_plus": res_plus[0],
             "res_plus_time": res_plus[1],
             "status_res_plus": res_plus[2],
-            "pred": pred[0],
         }
 
         with open(str(file_path) + "_log.txt", "a+") as f:
@@ -150,3 +129,6 @@ def test(eps, file_path=""):
         f.write("\n")
         f.write("Plus solved number: " + str(solved_plus))
         f.write("\n")
+
+
+test(0.0008, "/Neural Network/ACASXu/ACASXU_experimental_v2a_1_3.nnet")

@@ -2,8 +2,16 @@ import matlab.engine
 import numpy as np
 import Utils.Utils as util
 import os
-from src.NeuralNetwork import NeuralNetwork
 
+import crown
+from src.NeuralNetwork import NeuralNetwork
+from sklearn import datasets
+
+data_ = datasets.load_iris()
+print(data_.keys())
+X = data_['data']
+y = data_['target']
+print(X)
 
 def test(eps, file_path=""):
     """
@@ -14,7 +22,7 @@ def test(eps, file_path=""):
     """
 
     # 0. for reading nnet file
-    dims, weights, bias, x_min, x_max = util.read_nn(file_path)
+    dims = [4, 5, 10, 20, 30, 40, 5, 10, 20, 30, 40,  3]
     print("model: ", file_path)
     print("dims: ", dims)
     nn = NeuralNetwork(dims)
@@ -22,39 +30,35 @@ def test(eps, file_path=""):
     # nn.load_weights()
 
     # 2. for training
-    # nn.train(cache=False, mode=2)
-    # nn.read_weights()
+    nn.train(cache=False, mode=2)
+    nn.read_weights()
 
-    # 3. for random NN
-    # nn.train(cache=True)
-    # nn.generateRandomWeights()
+    print(nn.weights)
+    params = []
+    for i in range(len(dims) - 1):
+        params.append(tuple([nn.weights[i].T, np.squeeze(nn.bias[i], axis=1)]))
+    print(params)
+    import pickle
+    pickle.dump(params, open("../params.pkl", 'wb'))
 
-    # 4. for adding weights and bias to the instance
-    nn.weights = weights
-    nn.bias = bias
-    nn.dims = dims
 
     # start matlab
     eng = matlab.engine.start_matlab()
     eng.cd(r"matlab")
+    eng.addpath(r'matlab')
 
     # save weights and bias
-    util.write_single_data_to_matlab_path('./matlab/weights.mat', "weights", nn.weights)
-    util.write_single_data_to_matlab_path('./matlab/ias.mat', 'bias', nn.bias)
+    util.write_single_data_to_matlab_path('../matlab/weights.mat', "weights", nn.weights)
+    util.write_single_data_to_matlab_path('../matlab/ias.mat', 'bias', nn.bias)
 
     solved_primal = 0
     solved_dual = 0
     solved_plus = 0
 
-    # for root,dirs,files in os.walk("./Dataset/"):
-    #     sample_file_path = files
-
-    for i in range(1):
+    for i in range(len(X)):
         # sample_image = test_images[i] / 255
-        # np.random.seed(i)
-        # sample_image = np.random.rand(dims[0], 1) / 10
-        sample_image = np.array([[0.64, -0.2, -0.2, 0.47, -0.47]]).T
-
+        sample_image = np.expand_dims(X[i].T, axis=1)
+        print(sample_image)
         # sample_image = sample_image.reshape((-1, 1))
         # print(sample_image)
         # break
@@ -67,24 +71,39 @@ def test(eps, file_path=""):
         # sample_image = util.read_sample("Dataset/AutoTaxi/AutoTaxi_ExampleImage.npy")
 
         # save sample
-        util.write_single_data_to_matlab_path('./matlab/sample.mat', 'input', sample_image)
+        util.write_single_data_to_matlab_path('../matlab/sample.mat', 'input', sample_image)
 
         # convert dims to a matlab.double data structure
         dims_double = matlab.double(dims)
 
         # sample_image = matlab.double(sample_image.T.tolist())
+        # sample_label = 3
+
+        # Tensorflow dataset
+        # sample_label = test_labels.tolist()[i]
+
+        sample_label = int(y[i])
 
         pred = nn.predict_manual_mnist(sample_image)
-        sample_label = int(pred[1])
+
+        bias = []
+        for i in range(len(nn.bias)):
+            bias.append(np.squeeze(nn.bias[i], axis=1))
+        ret = crown.compute_worst_bound(nn.weights, bias, sample_label, 1, sample_image, pred[0], len(dims) - 1, "i", eps, "adaptive",
+                                        "disable", False, False, False, False, "relu")
+        util.write_single_data_to_matlab_path('../matlab/y_min.mat', 'y_min', ret[0])
+        util.write_single_data_to_matlab_path('../matlab/y_max.mat', 'y_max', ret[1])
+        util.write_single_data_to_matlab_path('../matlab/x_min.mat', 'x_min', ret[2])
+        util.write_single_data_to_matlab_path('../matlab/x_max.mat', 'x_max', ret[3])
 
         # SDR
-        res_primal = eng.test_acas(eps, 1, dims_double, sample_label + 1, 1, nargout=3)
+        res_primal = eng.test_iris(eps, 1, dims_double, sample_label + 1, 1, nargout=3)
 
         # DeepSDP
-        res_dual = eng.test_acas(eps, 1, dims_double, sample_label + 1, 2, nargout=3)
+        res_dual = eng.test_iris(eps, 1, dims_double, sample_label + 1, 2, nargout=3)
 
         # Deeplus
-        res_plus = eng.test_acas(eps, 1, dims_double, sample_label + 1, 3, nargout=3)
+        res_plus = eng.test_iris(eps, 1, dims_double, sample_label + 1, 3, nargout=3)
 
         if res_primal[2] == 1.0:
             solved_primal += 1
@@ -125,8 +144,9 @@ def test(eps, file_path=""):
         f.write("\n")
         f.write("Dual solved number: " + str(solved_dual))
         f.write("\n")
-        f.write("Plus solved number: " + str(solved_plus))
+        f.write("Dual solved number: " + str(solved_plus))
         f.write("\n")
 
 
-test(0.0008, "D:/WORK_SPACE/verification/Neural Network/ACASXu/ACASXU_experimental_v2a_1_3.nnet")
+for i in [0.8]:
+    test(i, "iris")

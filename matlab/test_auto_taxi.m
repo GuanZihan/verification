@@ -2,7 +2,6 @@ function [bounds, times, status] = test_auto_taxi(eps, pred, dims, label, method
 % clc;
 % clear all;
 % clf;
-addpath('../../DeepSDP/');
 %%
 rng('default');
 
@@ -21,6 +20,7 @@ x_max = xc_in + eps;
 options.language = 'yalmip';
 options.solver = 'mosek';
 options.verbose = false;
+options.bounds = "naive";
 
 net = nnsequential(dims,'relu');
 
@@ -38,11 +38,11 @@ net.biases{end} = double(net.biases{end});
 status = 1;
 
 % Auto_Taxi
-opt_v = 9999
+opt_v = -1
 if method == 1
     for i = 1:2
         [bounds, times, ~] = sdr_multi(net, x_min,x_max,i,label,options);
-        if norm(pred - bounds) < opt_v
+        if norm(pred - bounds) > opt_v
             opt_v = norm(pred - bounds)
         end
     end
@@ -55,7 +55,7 @@ end
 if method == 2
     for i = 1:2
        [bounds, times, ~] = deepsdp_multi(net,x_min,x_max,i,label,options);
-        if norm(pred - bounds) < opt_v
+        if norm(pred - bounds) > opt_v
             opt_v = norm(pred - bounds)
         end
     end
@@ -68,7 +68,7 @@ end
 if method == 3
     for i = 1:2
         [bounds, times, ~] = deeplus(net,x_min,x_max,i,label,options);
-       if norm(pred - bounds) < opt_v
+       if norm(pred - bounds) > opt_v
            opt_v = norm(pred - bounds)
         end
     end

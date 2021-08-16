@@ -20,6 +20,7 @@ x_max = xc_in + eps;
 options.language = 'yalmip';
 options.solver = 'mosek';
 options.verbose = false;
+options.bounds = "crown";
 
 net = nnsequential(dims,'relu');
 

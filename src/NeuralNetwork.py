@@ -6,6 +6,8 @@ import matlab.engine
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Dropout, Flatten, MaxPooling2D
 from sklearn import datasets
+from numba import jit
+
 
 def load_data():
     (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
@@ -24,6 +26,7 @@ class NeuralNetwork:
     cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                      save_weights_only=True,
                                                      verbose=1)
+
     def __init__(self, dims):
         self.model = None
         self.weights = []
@@ -59,6 +62,7 @@ class NeuralNetwork:
             self.model.fit(x=train_images, y=train_labels, epochs=50, callbacks=[self.cp_callback])
             self.model.load_weights(self.checkpoint_path)
 
+    @jit(nopython=True)
     def load_weights(self):
         model_json = "D:/WORK_SPACE/verification/Neural Network/Aditi/nips_pgd.json"
         self.create_model()

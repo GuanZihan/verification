@@ -1,15 +1,12 @@
-import matlab.engine
-import numpy as np
-import Utils.Utils as util
 import os
+
+import matlab.engine
+
+import Utils.Utils as util
 from src.NeuralNetwork import NeuralNetwork
-from sklearn import datasets
+import numpy as np
 
-data_ = datasets.load_iris()
-print(data_.keys())
-X = data_['data']
-y = data_['target']
-
+# (train_images, train_labels), (test_images, test_labels) = datasets.mnist.load_data()
 
 def test(eps, file_path=""):
     """
@@ -20,16 +17,35 @@ def test(eps, file_path=""):
     """
 
     # 0. for reading nnet file
-    dims = [4, 200, 10, 20, 3]
+    dims, weights, bias, x_min, x_max = util.read_nn(file_path)
+    # dims = [784, 200, 100, 50, 10]
+    # dims = file_path
+    # dims = file_path
     print("model: ", file_path)
     print("dims: ", dims)
+
+    # weights = 0
+    # bias = 0
+    # with util.open_file("models/raghunathan18_pgdnn.pkl", 'rb') as f:
+    #     file = np.load(f, allow_pickle=True)
+    #     W = []
+    #     b = []
+    #     for layer in file:
+    #         W.append(layer[0].T)
+    #         b.append(np.expand_dims(layer[1], axis=1))
+    #     weights = W
+    #     bias = b
+    # dims = [784, 200, 100, 50, 10]
+
     nn = NeuralNetwork(dims)
+    nn.weights = weights
+    nn.bias = bias
     # 1. for aditi load_weights
     # nn.load_weights()
 
     # 2. for training
-    nn.train(cache=True, mode=2)
-    nn.read_weights()
+    # nn.train(cache=False)
+    # nn.read_weights()
 
     # 3. for random NN
     # nn.train(cache=True)
@@ -41,16 +57,21 @@ def test(eps, file_path=""):
     eng.addpath(r'matlab')
 
     # save weights and bias
-    util.write_single_data_to_matlab_path('./matlab/weights.mat', "weights", nn.weights)
-    util.write_single_data_to_matlab_path('./matlab/ias.mat', 'bias', nn.bias)
+    util.write_single_data_to_matlab_path('matlab/weights.mat', "weights", weights)
+    util.write_single_data_to_matlab_path('matlab/ias.mat', 'bias', bias)
 
     solved_primal = 0
     solved_dual = 0
     solved_plus = 0
+    # for every samples
+    sample_file_path = []
 
-    for i in range(len(X)):
+    for root, dirs, files in os.walk("Dataset/AutoTaxi/"):
+        sample_file_path = files
+
+    for i in sample_file_path:
         # sample_image = test_images[i] / 255
-        sample_image = np.expand_dims(X[i].T, axis=1)
+        sample_image = util.read_sample("Dataset/AutoTaxi/" + i)
         # sample_image = sample_image.reshape((-1, 1))
         # print(sample_image)
         # break
@@ -63,7 +84,7 @@ def test(eps, file_path=""):
         # sample_image = util.read_sample("Dataset/AutoTaxi/AutoTaxi_ExampleImage.npy")
 
         # save sample
-        util.write_single_data_to_matlab_path('./matlab/sample.mat', 'input', sample_image)
+        util.write_single_data_to_matlab_path('matlab/sample.mat', 'input', sample_image)
 
         # convert dims to a matlab.double data structure
         dims_double = matlab.double(dims)
@@ -74,17 +95,20 @@ def test(eps, file_path=""):
         # Tensorflow dataset
         # sample_label = test_labels.tolist()[i]
 
-        sample_label = int(y[i])
-        # pred = nn.predict_manual_taxi(sample_image)
+        sample_label = 0
+
+        pred = nn.predict_manual_taxi(sample_image)
 
         # SDR
-        res_primal = eng.test_iris(eps, 1, dims_double, sample_label + 1, 1, nargout=3)
+        res_primal = eng.test_auto_taxi(eps, float(pred[0][0]), dims_double, sample_label + 1, 1, nargout=3)
 
         # DeepSDP
-        res_dual = eng.test_iris(eps, 1, dims_double, sample_label + 1, 2, nargout=3)
+        res_dual = eng.test_auto_taxi(eps, float(pred[0][0]), dims_double, sample_label + 1, 2, nargout=3)
 
         # Deeplus
-        res_plus = eng.test_iris(eps, 1, dims_double, sample_label + 1, 3, nargout=3)
+        res_plus = eng.test_auto_taxi(eps, float(pred[0][0]), dims_double, sample_label + 1, 3, nargout=3)
+
+        print("original value: ", pred[0], end="\n\n")
 
         if res_primal[2] == 1.0:
             solved_primal += 1
@@ -114,6 +138,7 @@ def test(eps, file_path=""):
             "res_plus": res_plus[0],
             "res_plus_time": res_plus[1],
             "status_res_plus": res_plus[2],
+            "pred": pred[0],
         }
 
         with open(str(file_path) + "_log.txt", "a+") as f:
@@ -125,8 +150,5 @@ def test(eps, file_path=""):
         f.write("\n")
         f.write("Dual solved number: " + str(solved_dual))
         f.write("\n")
-        f.write("Dual solved number: " + str(solved_plus))
+        f.write("Plus solved number: " + str(solved_plus))
         f.write("\n")
-
-
-test(0.1, "iris")

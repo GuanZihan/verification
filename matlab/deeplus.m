@@ -21,10 +21,8 @@ weights = net.weights;
 biases = net.biases;
 activation = net.activation;
 dims = net.dims;
-% display(x_min);
-% display(x_max);
+
 %%
-% [Y_min,Y_max,X_min,X_max,~,~] = net.interval_arithmetic(x_min,x_max);
 num_layers = length(net.dims)-2;
 
 k = 1;
@@ -39,6 +37,16 @@ for k=1:num_layers+1
         X_max{k+1} = max(Y_max{k},0);
     end
 end
+
+if(options.bounds == "crown")
+   for k=1:num_layers
+        Y_max{k} = double(load("y_max.mat").y_max{k}');
+        Y_min{k} = double(load("y_min.mat").y_min{k}');
+        X_max{k+1} = double(load("x_max.mat").x_max{k}');
+        X_min{k+1} = double(load("x_min.mat").x_min{k}');
+    end
+end
+
 % input dimension
 dim_in = dims(1);
 % output dimension
@@ -56,9 +64,8 @@ for i = 1: num_hidden_layers
     Y_min{i} = Y_min{i}(cp_In_i);
     Y_max{i} = Y_max{i}(cp_In_i);
     dims(i + 1) = dims(i + 1) - length(In_i);
-    disp(dims);
 end
-
+disp(dims);
 X_min = cat(1, X_min{2:end});
 X_max = cat(1, X_max{2:end});
 Y_min = cat(1, Y_min{1: end - 1});
@@ -108,17 +115,16 @@ if(strcmp(activation,'relu'))
 %             C = [C;nchoosek(In,2)];
 %         end
 
-        %
-        if num_neurons >= 50
-            C = nchoosek(1:50, 2);
+        % if neurons number is greater than 50, then only choose 50 neurons
+        % randomly
+        if num_neurons >= 30
+            rand_i = randi([1, num_neurons], 1, 30);
+            C = nchoosek(rand_i, 2);
         else
             C = nchoosek(1:num_neurons, 2);
         end
         
         m = size(C,1);
-            
-
-        
         
         if(m>0)
             if(strcmp(language,'cvx'))
@@ -160,13 +166,9 @@ if(strcmp(activation,'relu'))
 
         D = diag(sdpvar(num_neurons,1));
 
-%         delta = sdpvar(num_neurons,1);
-         delta = diag(sdpvar(num_neurons,1));
+        delta = diag(sdpvar(num_neurons,1));
 
         constraints = [constraints, nu(In)>=0, nu(Ipn)>=0, eta(Ip)>=0, eta(Ipn)>=0, D(:)>=0, delta(Ipn,Ipn) >= 0, delta(Ip,Ip) == 0, delta(In,In) == 0];
-%         constraints = [constraints, nu(:)>=0, nu(:)>=0, eta(:)>=0, eta(:)>=0, D(:)>=0];
-%         constraints = [constraints, nu(In)>=0, nu(Ipn)>=0, eta(Ip)>=0, eta(Ipn)>=0, D(:)>=0,delta(Ipn,Ipn) >= 0, delta(Ip,Ip) <= 0, delta(In,In) <= 0];
-
 
     else
         error('please select "yalmip" or "cvx" for the field "language"');
@@ -174,7 +176,6 @@ if(strcmp(activation,'relu'))
 
 
     %
-    s = (X_max-X_min)./(Y_max-Y_min);
 
     alpha_param = zeros(num_neurons,1);
     alpha_param(Ip)=1;
@@ -272,7 +273,6 @@ elseif(strcmp(language,'yalmip'))
 
 end
 
-%message = ['method: DeepSDP', '(version ', version, ')','| solver: ', solver, '| bound: ', num2str(bound), '| solvetime: ', num2str(time), '| status: ', status];
 message = ['method: Deeplus ', version,'| solver: ', solver, '| bound: ', num2str(bound,'%.5f'), '| solvetime: ', num2str(time,'%.3f'), '| status: ', status];
 
 
