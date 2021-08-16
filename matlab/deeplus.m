@@ -53,6 +53,7 @@ dim_in = dims(1);
 dim_out = dims(end);
 
 num_hidden_layers = length(dims)-2;
+% remove vacuous neurons
 for i = 1: num_hidden_layers
     In_i = find(Y_max{i} <= 0);
     cp_In_i = setdiff(1: dims(i + 1),In_i);
@@ -66,6 +67,8 @@ for i = 1: num_hidden_layers
     dims(i + 1) = dims(i + 1) - length(In_i);
 end
 disp(dims);
+
+%concate the bound as a vector
 X_min = cat(1, X_min{2:end});
 X_max = cat(1, X_max{2:end});
 Y_min = cat(1, Y_min{1: end - 1});
@@ -75,28 +78,15 @@ dim_last_hidden = dims(end-1);
 % total number of neurons
 num_neurons = sum(dims(2:end-1));
 
+% active/inactive
 Ip = find(Y_min>0);
 In = find(Y_max<0);
 Ipn = setdiff(1:num_neurons,union(Ip,In));
 
 %% Construct Min
-if(strcmp(language,'cvx'))
 
-    eval(['cvx_solver ' solver])
-
-    if(verbose)
-        cvx_begin sdp
-    else
-        cvx_begin sdp quiet
-    end
-
-    variable tau(dim_in,1) nonnegative;
-elseif(strcmp(language,'yalmip'))
-    tau = sdpvar(dim_in,1);
-    constraints = [tau(:)>=0];
-else
-
-end
+tau = sdpvar(dim_in,1);
+constraints = [tau(:)>=0];
 
 P = [-2*diag(tau) diag(tau)*(x_min+x_max);(x_min+x_max).'*diag(tau) -2*x_min.'*diag(tau)*x_max];
 tmp = ([eye(dim_in) zeros(dim_in,num_neurons+1);zeros(1,dim_in+num_neurons) 1]);
@@ -108,15 +98,6 @@ if(strcmp(activation,'relu'))
     T = zeros(num_neurons);
     II = eye(num_neurons);
         C = [];
-%         if(numel(Ip)>1)
-%             C = nchoosek(Ip,2);
-%         end
-%         if(numel(In)>1)
-%             C = [C;nchoosek(In,2)];
-%         end
-
-        % if neurons number is greater than 50, then only choose 50 neurons
-        % randomly
         if num_neurons >= 30
             rand_i = randi([1, num_neurons], 1, 30);
             C = nchoosek(rand_i, 2);
@@ -139,48 +120,20 @@ if(strcmp(activation,'relu'))
         end
 
 
-    if(strcmp(language,'cvx'))
+    nu = sdpvar(num_neurons,1);
 
-        % x=max(0,y)
+    lambda = sdpvar(num_neurons,1);
 
+    eta = sdpvar(num_neurons,1);
 
-        % multiplier corresponding to x>=0
-        variable nu(num_neurons,1) %nonnegative
+    D = diag(sdpvar(num_neurons,1));
 
-        % sector bounds on relu x^2=xy
-        variable lambda(num_neurons,1)
+    delta = diag(sdpvar(num_neurons,1));
 
-        % multipliers correspoding to x>=y
-        variable eta(num_neurons,1) %nonnegative
-
-        % multipliers corresponding to $lb<=x<=ub$
-        variable D(num_neurons,num_neurons) diagonal nonnegative
-
-    elseif(strcmp(language,'yalmip'))
-
-        nu = sdpvar(num_neurons,1);
-
-        lambda = sdpvar(num_neurons,1);
-
-        eta = sdpvar(num_neurons,1);
-
-        D = diag(sdpvar(num_neurons,1));
-
-        delta = diag(sdpvar(num_neurons,1));
-
-        constraints = [constraints, nu(In)>=0, nu(Ipn)>=0, eta(Ip)>=0, eta(Ipn)>=0, D(:)>=0, delta(Ipn,Ipn) >= 0, delta(Ip,Ip) == 0, delta(In,In) == 0];
-
-    else
-        error('please select "yalmip" or "cvx" for the field "language"');
-    end
-
-
-    %
+    constraints = [constraints, nu(In)>=0, nu(Ipn)>=0, eta(Ip)>=0, eta(Ipn)>=0, D(:)>=0, delta(Ipn,Ipn) >= 0, delta(Ip,Ip) == 0, delta(In,In) == 0];
 
     alpha_param = zeros(num_neurons,1);
     alpha_param(Ip)=1;
-
-
 
     beta_param = ones(num_neurons,1);
     original_beta = beta_param;
@@ -230,48 +183,17 @@ Mout = tmp.'*S*tmp;
 
 %% solve SDP
 
-if(strcmp(language,'cvx'))
-
-    minimize(obj)
-
-    subject to
-
-    Min+Mmid+Mout<=0;
-
-    nu(In)>=0;
-    nu(Ipn)>=0;
-
-    eta(Ip)>=0;
-    eta(Ipn)>=0;
-
-
-    cvx_end
-
-    bound = obj;
-    time= cvx_cputime;
-    status = cvx_status;
-
-%     X = rect2d(x_min,x_max);
-%     figure;
-%     scatter(X(1,:),X(2,:));hold on;
-%     E = ellipsoid2d(2*diag(tau),-diag(tau)*(x_min+x_max),2*x_min'*diag(tau)*x_max);
-%     scatter(E(1,:),E(2,:));
-
-
-elseif(strcmp(language,'yalmip'))
-    constraints = [constraints, Min+Mmid+Mout<=0];
-    options = sdpsettings('solver',solver,'verbose',verbose);
-    disp("Solving problem -- Deeplus")
-    out = optimize(constraints,obj,options);
-    bound = value(obj);
-   if label == 2
-       bound = -bound;
-   end
-
-    time= out.solvertime;
-    status = out.info;
-
+constraints = [constraints, Min+Mmid+Mout<=0];
+options = sdpsettings('solver',solver,'verbose',verbose);
+disp("Solving problem -- Deeplus")
+out = optimize(constraints,obj,options);
+bound = value(obj);
+if label == 2
+   bound = -bound;
 end
+
+time= out.solvertime;
+status = out.info;
 
 message = ['method: Deeplus ', version,'| solver: ', solver, '| bound: ', num2str(bound,'%.5f'), '| solvetime: ', num2str(time,'%.3f'), '| status: ', status];
 
