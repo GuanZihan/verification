@@ -7,9 +7,6 @@ import scipy.io as scio
 
 
 def open_file(name, *open_args, **open_kwargs):
-    """
-    Load file function from 'Enabling certification of verification-agnostic networks via memory-efficient semidefinite programming'
-    """
     local_path = "./" + name
     if not os.path.exists(os.path.dirname(local_path)):
         os.makedirs(os.path.dirname(local_path))
