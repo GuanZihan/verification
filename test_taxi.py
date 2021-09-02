@@ -17,6 +17,7 @@ def test(eps, nn_file, output):
     print("model: ", nn_file)
     print("dims: ", dims)
 
+    # create a new instance and assign the weights and bias. Although we didn't explicitly use nn.weights/nn.bias here, it should still be done.
     nn = NeuralNetwork(dims)
     nn.weights = weights
     nn.bias = bias
@@ -30,16 +31,18 @@ def test(eps, nn_file, output):
     util.write_single_data_to_matlab_path('matlab/weights.mat', "weights", weights)
     util.write_single_data_to_matlab_path('matlab/ias.mat', 'bias', bias)
 
+    # counter for solved instance
     solved_primal = 0
     solved_dual = 0
     solved_plus = 0
-    # for every samples
+    # store all the samples
     sample_file_path = []
 
     # get all the samples
     for root, dirs, files in os.walk("Dataset/AutoTaxi/"):
         sample_file_path = files
 
+    # iterate all the samples
     for i in sample_file_path:
         sample_image = util.read_sample("Dataset/AutoTaxi/" + i)
 

@@ -62,7 +62,7 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
     print("neural network: ", nn_file)
     print("dims: ", dims)
 
-    # neural network instance
+    # create a new instance and assign the weights and bias. Although we didn't explicitly use nn.weights/nn.bias here, it should still be done.
     nn = NeuralNetwork(dims)
     nn.weights = weights
     nn.bias = bias
@@ -101,6 +101,7 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
 
         bounds = util.process_bounds(bounds)
 
+        # write bounds into the .mat file
         util.write_single_data_to_matlab_path('./matlab/y_min.mat', 'y_min', bounds[0])
         util.write_single_data_to_matlab_path('./matlab/y_max.mat', 'y_max', bounds[1])
         util.write_single_data_to_matlab_path('./matlab/x_min.mat', 'x_min', bounds[2])
@@ -108,6 +109,7 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
 
         print("No." + str(index) + " sample target label is " + str(target) + " true label is " + str(sample_label))
 
+        # different methods have different returned data
         if method == "primal":
             # SDR
             res_primal = eng.test_mnist(eps, dims_double, sample_label + 1, target + 1, input_bounds[0],
