@@ -85,13 +85,29 @@ dim_final = dims(end-1);
 y_final = M(1, 1 + current_pos_matrix: current_pos_matrix + dim_final).';
 
 c = zeros(dim_out,1);
-c(label) = -1;
-c(target) = 1;
+% classification problem
+if options.mode == 1
+    c(label) = -1;
+    c(target) = 1;
+end
+% prediction problem
+if options.mode == 2
+    if label == 1
+        c(1) = 1;
+    end
+    if label == 2
+        c(1) = -1;
+    end
+end
+
 obj = c.'*(weights{end}*y_final + biases{end});
 disp("Solving problem -- SDR")
 out = optimize(constraints, -obj,sdpsettings('solver',solver,'verbose',verbose,'dualize', 1, 'mosek.MSK_IPAR_BI_IGNORE_MAX_ITER', 1, 'mosek.MSK_IPAR_BI_IGNORE_NUM_ERROR', 1));
 
 bound = value(obj);
+if options.mode == 2 & label == 2
+    bound = -bound;
+end
 time= out.solvertime;
 status = out.info;
 

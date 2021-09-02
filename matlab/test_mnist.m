@@ -1,4 +1,4 @@
-function [bounds, times, status] = test_mnist(eps, ~, dims, label, target, lower, upper, num, method)
+function [bounds, times, status] = test_mnist(eps, dims, label, target, lower, upper, num, method)
 % clc;
 % clear all;
 % clf;
@@ -17,6 +17,7 @@ options.language = 'yalmip';
 options.solver = 'mosek';
 options.verbose = false;
 options.bounds = "crown";
+options.mode = 1;
 
 net = nnsequential(dims,'relu');
 

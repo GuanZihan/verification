@@ -42,6 +42,8 @@ python train.py --dataset iris --dims "[4, 5, 10, 20, 30, 40, 3]"
 python3 index.py --dataset iris --nnfile params.pkl --eps 0.075 --dims "[4,5,10,20,30,40,3]" --num 30 --input_bounds "(0., 10.)" --method "sdpnet"   --output iris_log.txt
 ```
 
+Currently, we support benchmarks such as MNIST, Iris and Auto-taxi.
+
 In this repository, we have included some additional directories such as MOSEK and YALMIP. If you have installed these packages on your computer, you could just delete these files and remove the `eng.init()` function  in `test.py`
 
 

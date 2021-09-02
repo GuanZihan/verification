@@ -55,7 +55,6 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
         data_ = datasets.load_iris()
         X = data_['data']
         y = data_['target']
-
     # extract neural network and store the weights and bias into an instance
     params = _load_weights(nn_file)
     weights, bias = _load_weights_pkl(nn_file)
@@ -111,7 +110,7 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
 
         if method == "primal":
             # SDR
-            res_primal = eng.test_mnist(eps, 1, dims_double, sample_label + 1, target + 1, input_bounds[0],
+            res_primal = eng.test_mnist(eps, dims_double, sample_label + 1, target + 1, input_bounds[0],
                                         input_bounds[1], num, 1, nargout=3)
             if res_primal[2] == 1.0:
                 solved_primal += 1
@@ -126,7 +125,7 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
             }
         elif method == "dual":
             # DeepSDP
-            res_dual = eng.test_mnist(eps, 1, dims_double, sample_label + 1, target + 1, input_bounds[0],
+            res_dual = eng.test_mnist(eps, dims_double, sample_label + 1, target + 1, input_bounds[0],
                                       input_bounds[1], num, 2, nargout=3)
             if res_dual[2] == 1.0:
                 solved_dual += 1
@@ -141,7 +140,7 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
             }
         elif method == "sdpnet":
             # SDPNET
-            res_plus = eng.test_mnist(eps, 1, dims_double, sample_label + 1, target + 1, input_bounds[0],
+            res_plus = eng.test_mnist(eps, dims_double, sample_label + 1, target + 1, input_bounds[0],
                                       input_bounds[1], num, 3, nargout=3)
 
             if res_plus[2] == 1.0:
@@ -156,11 +155,11 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
                 "status_res_plus": res_plus[2],
             }
         elif method == "all":
-            res_primal = eng.test_mnist(eps, 1, dims_double, sample_label + 1, target + 1, input_bounds[0],
+            res_primal = eng.test_mnist(eps, dims_double, sample_label + 1, target + 1, input_bounds[0],
                                         input_bounds[1], num, 1, nargout=3)
-            res_dual = eng.test_mnist(eps, 1, dims_double, sample_label + 1, target + 1, input_bounds[0],
+            res_dual = eng.test_mnist(eps, dims_double, sample_label + 1, target + 1, input_bounds[0],
                                       input_bounds[1], num, 2, nargout=3)
-            res_plus = eng.test_mnist(eps, 1, dims_double, sample_label + 1, target + 1, input_bounds[0],
+            res_plus = eng.test_mnist(eps, dims_double, sample_label + 1, target + 1, input_bounds[0],
                                       input_bounds[1], num, 3, nargout=3)
 
             if res_primal[2] == 1.0:
@@ -190,11 +189,11 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
             print("Please specify a method 1) primal 2) dual 3) sdpnet 4) all")
             break
 
-        with open(output, "a+") as f:
+        with open(str(output), "a+") as f:
             f.write(str(ret))
             f.write("\n")
 
-    with open(output + "_log.txt", "a+") as f:
+    with open(str(output), "a+") as f:
         f.write("primal solved number: " + str(solved_primal))
         f.write("\n")
         f.write("Dual solved number: " + str(solved_dual))

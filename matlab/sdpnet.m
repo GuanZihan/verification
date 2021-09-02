@@ -2,6 +2,7 @@ function [bound, time,status] =  sdpnet(net,x_min,x_max,label,target,num, option
 % SDPNET is built based on the dual SDP method
 version = '1.0';
 
+disp(options);
 language = options.language;
 solver = options.solver;
 verbose = options.verbose;
@@ -64,8 +65,16 @@ disp(dims);
 
 X_min = cat(1, X_min{2:end});
 X_max = cat(1, X_max{2:end});
-Y_min = cat(1, Y_min{1: end});
-Y_max = cat(1, Y_max{1:end});
+if options.mode == 1
+    Y_min = cat(1, Y_min{1: end});
+    Y_max = cat(1, Y_max{1:end});
+end
+if options.mode == 2
+    Y_min = cat(1, Y_min{1: end - 1});
+    Y_max = cat(1, Y_max{1:end - 1});
+end
+
+
 dim_last_hidden = dims(end-1);
 
 % total number of neurons
@@ -99,13 +108,10 @@ if(strcmp(activation,'relu'))
         m = size(C,1);
         
         if(m>0)
-            if(strcmp(language,'cvx'))
-                variable zeta(m,1) nonnegative;
-            elseif(strcmp(language,'yalmip'))
-                zeta = sdpvar(m,1);
-                constraints = [constraints,zeta>=0];
-            else
-            end
+
+            zeta = sdpvar(m,1);
+            constraints = [constraints,zeta>=0];
+
             E = II(:,C(:,1))-II(:,C(:,2));
             T = E*diag(zeta)*E';
         end
@@ -134,6 +140,9 @@ if(strcmp(activation,'relu'))
     beta_param = ones(num_neurons,1);
     original_beta = beta_param;
     beta_param(In) = 0;
+
+    disp(size(Y_max));
+    disp(size(delta));
 
     Q11 = -2*diag(alpha_param.*beta_param)*(diag(lambda));
     Q12 = diag(alpha_param+beta_param)*(diag(lambda))+T;
@@ -164,8 +173,20 @@ end
 obj = b;
 
 c = zeros(dim_out,1);
-c(label) = -1;
-c(target) = 1;
+% classification problem
+if options.mode == 1
+    c(label) = -1;
+    c(target) = 1;
+end
+% prediction problem
+if options.mode == 2
+    if label == 1
+        c(1) = 1;
+    end
+    if label == 2
+        c(1) = -1;
+    end
+end
 
 S = [zeros(dim_out,dim_out) c;c' -2*b];
 tmp = ([zeros(dim_out,dim_in+num_neurons-dim_last_hidden) weights{end} biases{end};zeros(1,dim_in+num_neurons) 1]);
@@ -174,10 +195,13 @@ Mout = tmp.'*S*tmp;
 %% solve SDP
 
 constraints = [constraints, Min+Mmid+Mout<=0];
-options = sdpsettings('solver',solver,'verbose',verbose);
+sdp_options = sdpsettings('solver',solver,'verbose',verbose);
 disp("Solving problem -- SDPNET")
-out = optimize(constraints,obj,options);
+out = optimize(constraints,obj,sdp_options);
 bound = value(obj);
+if options.mode == 2 & label == 2
+    bound = -bound;
+end
 time= out.solvertime;
 status = out.info;
 

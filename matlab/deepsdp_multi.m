@@ -57,9 +57,9 @@ if(strcmp(activation,'relu'))
     beta_param = ones(num_neurons,1);
 
     Q11 = -2*diag(alpha_param.*beta_param)*(diag(lambda));
-    Q12 = diag(alpha_param+beta_param)*(diag(lambda))+T;
+    Q12 = diag(alpha_param+beta_param)*(diag(lambda));
     Q13 = -nu;
-    Q22 = -2*diag(lambda)-2*D-2*T;
+    Q22 = -2*diag(lambda)-2*D;
     Q23 = nu+eta+D*(X_min+X_max);
     Q33 = -2*X_min'*D*X_max;
 
@@ -86,19 +86,34 @@ end
 obj = b;
 
 c = zeros(dim_out,1);
-c(label) = -1;
-c(repeated) = 1;
+% classification problem
+if options.mode == 1
+    c(label) = -1;
+    c(target) = 1;
+end
+% prediction problem
+if options.mode == 2
+    if label == 1
+        c(1) = 1;
+    end
+    if label == 2
+        c(1) = -1;
+    end
+end
 S = [zeros(dim_out,dim_out) c;c' -2*b];
 tmp = ([zeros(dim_out,dim_in+num_neurons-dim_last_hidden) weights{end} biases{end};zeros(1,dim_in+num_neurons) 1]);
 Mout = tmp.'*S*tmp;
 
 %% solve SDP
 constraints = [constraints, Min+Mmid+Mout<=0];
-options = sdpsettings('solver',solver,'verbose',verbose, 'mosek.MSK_IPAR_BI_IGNORE_MAX_ITER', 1, 'mosek.MSK_IPAR_BI_IGNORE_NUM_ERROR', 1);
+mosek_options = sdpsettings('solver',solver,'verbose',verbose, 'mosek.MSK_IPAR_BI_IGNORE_MAX_ITER', 1, 'mosek.MSK_IPAR_BI_IGNORE_NUM_ERROR', 1);
 disp("Solving problem -- DeepSDP")
-out = optimize(constraints,obj,options);
+out = optimize(constraints,obj,mosek_options);
     
 bound = value(obj);
+if options.mode == 2 & label == 2
+    bound = -bound;
+end
 time= out.solvertime;
 status = out.info;
 
