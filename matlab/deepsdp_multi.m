@@ -1,4 +1,4 @@
-function [bound, time,status] =  deepsdp_multi(net,x_min,x_max,label,repeated,options)
+function [bound, time,status] =  deepsdp_multi(net,x_min,x_max,label,target,options)
 
 % DeepSDP from "Mahyar Fazlyab, Manfred Morari, George J. Pappas, "Safety Verification and Robustness Analysis of Neural Networks via Quadratic Constraints and Semidefinite Programming"
 % DeepSDP is the implementation of dual sdp relaxation method
