@@ -4,11 +4,6 @@ function [bound, time,status] =  deepsdp_multi(net,x_min,x_max,label,target,opti
 % DeepSDP is the implementation of dual sdp relaxation method
 version = '1.0';
 
-%%------------- BEGIN CODE --------------
-if(isempty(options.language))
-    language = 'cvx';
-end
-
 language = options.language;
 solver = options.solver;
 verbose = options.verbose;
@@ -77,11 +72,7 @@ CM_mid = ([A bb;B zeros(size(B,1),1);zeros(1,size(B,2)) 1]);
 Mmid = CM_mid.'*Q*CM_mid;
 
 %% Construct Mout
-if(strcmp(language,'cvx'))
-    variable b;
-elseif(strcmp(language,'yalmip'))
-    b = sdpvar(1);
-end
+b = sdpvar(1);
 
 obj = b;
 
