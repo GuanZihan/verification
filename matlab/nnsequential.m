@@ -73,8 +73,6 @@ classdef nnsequential
             for i=1:num_layers
                 Y_min{i} = max(obj.weights{i},0)*X_min{i}+min(obj.weights{i},0)*X_max{i}+obj.biases{i}(:);
                 Y_max{i} = max(obj.weights{i},0)*X_max{i}+min(obj.weights{i},0)*X_min{i}+obj.biases{i}(:);
-%                 display(Y_min{i});
-%                 display(Y_max{i});
                 X_min{i+1} = obj.activate(Y_min{i});
                 X_max{i+1} = obj.activate(Y_max{i});
                 

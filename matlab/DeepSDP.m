@@ -4,16 +4,42 @@ weights = net.weights;
 biases = net.biases;
 dims = net.dims;
 
-[Y_min,Y_max,X_min,X_max,~,~] = net.interval_arithmetic(x_min,x_max);
-
-X_min = [x_min; X_min];
-X_max = [x_max; X_max];
-
-% input dimension
-dim_in = dims(1);
-
 % the number of hidden layers
 num_hidden_layers = length(dims) - 2;
+
+X_min{1} = x_min;
+X_max{1} = x_max;
+
+% interval propagation
+for k=1:num_hidden_layers+1
+    Y_min{k} = max(net.weights{k},0)*X_min{k}+min(net.weights{k},0)*X_max{k}+net.biases{k}(:);
+    Y_max{k} = min(net.weights{k},0)*X_min{k}+max(net.weights{k},0)*X_max{k}+net.biases{k}(:);
+
+    if(k<=num_hidden_layers)
+        X_min{k+1} = max(Y_min{k},0);
+        X_max{k+1} = max(Y_max{k},0);
+    end
+end
+
+% remove the vacuous neurons and process the weights, bias, X_min, X_max, dims
+for i = 1: num_hidden_layers
+    In_i = find(Y_max{i} <= 0);
+    cp_In_i = setdiff(1: dims(i + 1),In_i);
+    weights{i} = weights{i}(cp_In_i, :);
+    weights{i + 1} = weights{i + 1}(:, cp_In_i);
+    biases{i} = biases{i}(cp_In_i);
+    X_min{i + 1} = X_min{i +1}(cp_In_i);
+    X_max{i + 1} = X_max{i +1}(cp_In_i);
+    Y_min{i} = Y_min{i}(cp_In_i);
+    Y_max{i} = Y_max{i}(cp_In_i);
+    dims(i + 1) = dims(i + 1) - length(In_i);
+end
+
+disp("Dims ")
+disp(dims)
+
+X_min = cat(1, X_min{1:end});
+X_max = cat(1, X_max{1:end});
 
 constraints_index = 1; % index of constraints
 t_subi = []; % total subi list
@@ -50,7 +76,6 @@ for k = 1:(dims(end-1))
    prob.barc.val = [prob.barc.val, 0.5 * (W_i_j_target(k) - W_i_j_label(k))];
    pointer = pointer + 1;
 end
-
 
 prob.barc.subj = [prob.barc.subj, 1];
 prob.barc.subk = [prob.barc.subk, 1];

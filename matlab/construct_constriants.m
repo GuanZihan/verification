@@ -9,13 +9,23 @@ function [subi, subj, subk, subl, val, blc, buc, ret_index] = construct_constria
 % u_i: the upper bound of last layer i-1
 
 % pre-allocate the space
-subi = [];
-subj = [];
-subk = [];
-subl = [];
-val = [];
-blc = [];
-buc = [];
+preallocate_space = dims(layer_index + 1);
+subi = zeros(1, preallocate_space * preallocate_space);
+subj = ones(1, preallocate_space * preallocate_space);
+subk = zeros(1, preallocate_space * preallocate_space);
+subl = zeros(1, preallocate_space * preallocate_space);
+val = zeros(1, preallocate_space * preallocate_space);
+blc = zeros(1, preallocate_space * 4);
+buc = zeros(1, preallocate_space * 4);
+
+%
+%subi = [];
+%subj = [];
+%subk = [];
+%subl = [];
+%val = [];
+%blc = [];
+%buc = [];
 
 dim_i = dims(layer_index + 1);
 dim_prev = dims(layer_index);
@@ -163,6 +173,5 @@ for j = 1: dim_prev
     constraints_index = constraints_index + 1;
 end
 end
-
 ret_index = constraints_index;
 end

@@ -49,9 +49,6 @@ end
 
 if method == 2
         [bounds, times, ~] = DeepSDP(net,x_min,x_max,label,target,options);
-        disp([label, target]);
-        [bounds, times, ~] = sdr_multi(net,x_min,x_max,label,target,options);
-%        [bounds, times, ~] = deepsdp_multi(net,x_min,x_max,label,target,options);
         if bounds > 0
             status = 0;
         end
