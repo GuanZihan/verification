@@ -42,6 +42,7 @@ def main():
         elif opt == "--method":
             method = arg
 
+    print(eps)
     test.test(eps, dataset=dataset, dims=dims, nn_file=neural_network, input_bounds=input_bounds, num=num, method = method,
               output=output)
     return

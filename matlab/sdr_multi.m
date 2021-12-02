@@ -102,7 +102,7 @@ end
 
 obj = c.'*(weights{end}*y_final + biases{end});
 disp("Solving problem -- SDR")
-out = optimize(constraints, -obj,sdpsettings('solver',solver,'verbose',verbose,'dualize', 1, 'mosek.MSK_IPAR_BI_IGNORE_MAX_ITER', 1, 'mosek.MSK_IPAR_BI_IGNORE_NUM_ERROR', 1));
+out = optimize(constraints, -obj,sdpsettings('solver',solver,'verbose',0,'dualize', 1, 'mosek.MSK_IPAR_BI_IGNORE_MAX_ITER', 1, 'mosek.MSK_IPAR_BI_IGNORE_NUM_ERROR', 1));
 
 bound = value(obj);
 if options.mode == 2 & label == 2
@@ -114,5 +114,4 @@ status = out.info;
 %% solve the problem
 message = ['method: sdr', '| solver: ', solver, '| bound: ', num2str(bound), '| time: ', num2str(time), '| status: ', status];
 disp(message);
-
 end
