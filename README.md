@@ -39,7 +39,7 @@ python3 index.py --dataset MNIST --nnfile model/raghunathan18_pgdnn.pkl --eps 0.
 If you want to self-train a neural network and verify it, we provide a `train.py` method to train a neural network and generate the required files
 ```shell
 python train.py --dataset iris --dims "[4, 5, 10, 20, 30, 40, 3]"
-python3 index.py --dataset iris --nnfile params.pkl --eps 0.075 --dims "[4,5,10,20,30,40,3]" --num 30 --input_bounds "(0., 10.)" --method "sdpnet"   --output iris_log.txt
+python index.py --dataset iris --nnfile params.pkl --eps 0.075 --dims "[4,5,10,20,30,40,3]" --num 30 --input_bounds "(0., 10.)" --method "sdpnet"   --output iris_log.txt
 ```
 
 Currently, we support benchmarks such as MNIST, Iris and Auto-taxi.

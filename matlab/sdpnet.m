@@ -24,7 +24,7 @@ if(options.bounds ~= "crown")
     for k=1:num_hidden_layers+1
         Y_min{k} = max(net.weights{k},0)*X_min{k}+min(net.weights{k},0)*X_max{k}+net.biases{k}(:);
         Y_max{k} = min(net.weights{k},0)*X_min{k}+max(net.weights{k},0)*X_max{k}+net.biases{k}(:);
-
+        
         if(k<=num_hidden_layers)
             X_min{k+1} = max(Y_min{k},0);
             X_max{k+1} = max(Y_max{k},0);
@@ -34,10 +34,10 @@ end
 
 % CROWN
 if(options.bounds == "crown")
-   for k=1:num_hidden_layers
+    for k=1:num_hidden_layers
         Y_max{k} = double(load("y_max").y_max{k}');
         Y_min{k} = double(load("y_min").y_min{k}');
-	    X_max{k+1} = double(load("x_max").x_max{k}');
+        X_max{k+1} = double(load("x_max").x_max{k}');
         X_min{k+1} = double(load("x_min").x_min{k}');
     end
 end
@@ -95,62 +95,62 @@ Min = tmp.'*P*tmp;
 if(strcmp(activation,'relu'))
     T = zeros(num_neurons);
     II = eye(num_neurons);
-        C = [];
-        % if neurons number is greater than 50, then only choose 50 neurons
-        % randomly
-        if num_neurons >= num
-            rand_i = randi([1, num_neurons], 1, num);
-            C = nchoosek(rand_i, 2);
-        else
-            C = nchoosek(1:num_neurons, 2);
-        end
+    C = [];
+    % if neurons number is greater than 50, then only choose 50 neurons
+    % randomly
+    if num_neurons >= num
+        rand_i = randi([1, num_neurons], 1, num);
+        C = nchoosek(rand_i, 2);
+    else
+        C = nchoosek(1:num_neurons, 2);
+    end
+    
+    m = size(C,1);
+    
+    if(m>0)
         
-        m = size(C,1);
+        zeta = sdpvar(m,1);
+        constraints = [constraints,zeta>=0];
         
-        if(m>0)
-
-            zeta = sdpvar(m,1);
-            constraints = [constraints,zeta>=0];
-
-            E = II(:,C(:,1))-II(:,C(:,2));
-            T = E*diag(zeta)*E';
-        end
-
-
-
+        E = II(:,C(:,1))-II(:,C(:,2));
+        T = E*diag(zeta)*E';
+    end
+    
+    
+    
     nu = sdpvar(num_neurons,1);
-
+    
     lambda = sdpvar(num_neurons,1);
-
+    
     eta = sdpvar(num_neurons,1);
-
+    
     D = diag(sdpvar(num_neurons,1));
-
+    
     delta = diag(sdpvar(num_neurons,1));
-
+    
     constraints = [constraints, nu(In)>=0, nu(Ipn)>=0, eta(Ip)>=0, eta(Ipn)>=0, D(:)>=0, delta(Ipn,Ipn) >= 0, delta(Ip,Ip) == 0, delta(In,In) == 0];
-
-
-
+    
+    
+    
     alpha_param = zeros(num_neurons,1);
     alpha_param(Ip)=1;
-
-
-
+    
+    
+    
     beta_param = ones(num_neurons,1);
     original_beta = beta_param;
     beta_param(In) = 0;
-
+    
     disp(size(Y_max));
     disp(size(delta));
-
+    
     Q11 = -2*diag(alpha_param.*beta_param)*(diag(lambda));
     Q12 = diag(alpha_param+beta_param)*(diag(lambda))+T;
     Q13 = -nu + delta * (Y_max);
     Q22 = -2*diag(lambda)-2*D-2*T;
     Q23 = nu+eta+D *(X_min+X_max) + delta * (Y_min - Y_max);
     Q33 = -2*X_min'*D*X_max - 2*Y_min'*delta*Y_max;
-
+    
     Q = [Q11 Q12 Q13; Q12.' Q22 Q23;Q13.' Q23.' Q33];
 else
     error('The method deep sdp is currently supported for ReLU activation functions only.');

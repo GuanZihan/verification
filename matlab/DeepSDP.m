@@ -3,7 +3,7 @@ solver = "MOSEK";
 weights = net.weights;
 biases = net.biases;
 dims = net.dims;
-
+profile on
 % the number of hidden layers
 num_hidden_layers = length(dims) - 2;
 
@@ -21,6 +21,8 @@ for k=1:num_hidden_layers+1
     end
 end
 
+
+
 % remove the vacuous neurons and process the weights, bias, X_min, X_max, dims
 for i = 1: num_hidden_layers
     In_i = find(Y_max{i} <= 0);
@@ -35,11 +37,16 @@ for i = 1: num_hidden_layers
     dims(i + 1) = dims(i + 1) - length(In_i);
 end
 
+save("y_max.mat", "Y_max");
+
 disp("Dims ")
 disp(dims)
 
 X_min = cat(1, X_min{1:end});
 X_max = cat(1, X_max{1:end});
+Y_min = cat(1, Y_min{1:end});
+Y_max = cat(1, Y_max{1:end});
+
 
 constraints_index = 1; % index of constraints
 t_subi = []; % total subi list
@@ -77,18 +84,20 @@ for k = 1:(dims(end-1))
    pointer = pointer + 1;
 end
 
+
 prob.barc.subj = [prob.barc.subj, 1];
 prob.barc.subk = [prob.barc.subk, 1];
 prob.barc.subl = [prob.barc.subl, 1];
 prob.barc.val = [prob.barc.val, t_bias(target_dim) - t_bias(label_dim)];
 
+prev_prev_dims_y = 0;
 % part 2: construct prob.bara
 for i = 1: num_hidden_layers + 1
     cur_layer = i; % current layer from 1 to l-1
     prev_dims = sum(dims(1:cur_layer));
     prev_prev_dims = sum(dims(1:(cur_layer-1)));
     cur_dims = dims(cur_layer + 1);
-    [subi, subj, subk, subl, val, blc, buc, ret_index] = construct_constriants(constraints_index, cur_layer, dims, cell2mat(weights(cur_layer)), cell2mat(biases(cur_layer)), X_min(prev_prev_dims + 1: prev_prev_dims + dims(cur_layer)), X_max(prev_prev_dims + 1: prev_prev_dims + dims(cur_layer)));
+    [subi, subj, subk, subl, val, blc, buc, ret_index] = construct_constriants(constraints_index, cur_layer, dims, cell2mat(weights(cur_layer)), cell2mat(biases(cur_layer)), X_min(prev_prev_dims + 1: prev_prev_dims + dims(cur_layer)), X_max(prev_prev_dims + 1: prev_prev_dims + dims(cur_layer)), Y_min(prev_prev_dims_y + 1: prev_prev_dims_y + dims(cur_layer + 1)), Y_max(prev_prev_dims_y + 1: prev_prev_dims_y + dims(cur_layer + 1)));
     t_subi = [t_subi, subi];
     t_subj = [t_subj, subj];
     t_subk = [t_subk, subk];
@@ -96,6 +105,7 @@ for i = 1: num_hidden_layers + 1
     t_val = [t_val, val];
     t_blc = [t_blc blc];
     t_buc = [t_buc, buc];
+    prev_prev_dims_y = prev_prev_dims_y + dims(cur_layer + 1);
     constraints_index = ret_index;
 end
 
@@ -108,11 +118,13 @@ prob.bara.val = t_val;
 prob.blc = t_blc;
 prob.buc = t_buc;
 
-
 [r,res] = mosekopt('maximize info',prob);
 bound = res.sol.itr.pobjval;
 time = res.info.MSK_DINF_OPTIMIZER_TIME;
 status = res.sol.itr.solsta;
+disp(' ');
 message = ['method: sdr', '| solver: ', solver, '| bound: ', num2str(bound), '| time: ', num2str(time), '| status: ', status];
 disp(message);
+%profile viewer
+%profsave
 end
