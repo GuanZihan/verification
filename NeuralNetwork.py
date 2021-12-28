@@ -1,10 +1,9 @@
 import json
-
 import tensorflow as tf
 import numpy as np
 import matlab.engine
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Conv2D, Dropout, Flatten, MaxPooling2D
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import Dense, Conv2D, Dropout, Flatten, MaxPooling2D
 from sklearn import datasets
 
 
@@ -34,18 +33,18 @@ class NeuralNetwork:
         self.weights_ = None
 
     # Creating a Sequential Model and adding the layers
-    def create_model(self):
-        model = Sequential([
-            Dense(self.dims[1], activation='relu', input_shape=(self.dims[0],))
-        ])
-        if len(self.dims) >= 4:
-            for i in self.dims[2: -1]:
-                model.add(Dense(i, activation="relu"))
-        model.add(Dense(self.dims[-1], activation="softmax"))
-        model.compile(optimizer='adam',
-                      loss='sparse_categorical_crossentropy',
-                      metrics=['accuracy'])
-        self.model = model
+    # def create_model(self):
+    #     model = Sequential([
+    #         Dense(self.dims[1], activation='relu', input_shape=(self.dims[0],))
+    #     ])
+    #     if len(self.dims) >= 4:
+    #         for i in self.dims[2: -1]:
+    #             model.add(Dense(i, activation="relu"))
+    #     model.add(Dense(self.dims[-1], activation="softmax"))
+    #     model.compile(optimizer='adam',
+    #                   loss='sparse_categorical_crossentropy',
+    #                   metrics=['accuracy'])
+    #     self.model = model
 
     def train(self, cache, mode):
         if mode == 1:

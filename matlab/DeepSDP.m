@@ -21,7 +21,6 @@ for k=1:num_hidden_layers+1
     end
 end
 
-disp(Y_min{2})
 
 
 % remove the vacuous neurons and process the weights, bias, X_min, X_max, dims
@@ -40,7 +39,7 @@ end
 
 
 disp("Dims ")
-disp(dims)
+disp(dims);
 
 X_min = cat(1, X_min{1:end});
 X_max = cat(1, X_max{1:end});
