@@ -21,6 +21,7 @@ for k=1:num_hidden_layers+1
     end
 end
 
+disp(Y_min{2})
 
 
 % remove the vacuous neurons and process the weights, bias, X_min, X_max, dims
@@ -37,7 +38,6 @@ for i = 1: num_hidden_layers
     dims(i + 1) = dims(i + 1) - length(In_i);
 end
 
-save("y_max.mat", "Y_max");
 
 disp("Dims ")
 disp(dims)
@@ -84,6 +84,12 @@ for k = 1:(dims(end-1))
    pointer = pointer + 1;
 end
 
+%for k = 2: 1+sum(dims(1:end-1))
+%    prob.barc.subj = [prob.barc.subj, 1];
+%    prob.barc.subk = [prob.barc.subk, k];
+%    prob.barc.subl = [prob.barc.subl, k];
+%    prob.barc.val = [prob.barc.val, -0.1];
+%end
 
 prob.barc.subj = [prob.barc.subj, 1];
 prob.barc.subk = [prob.barc.subk, 1];

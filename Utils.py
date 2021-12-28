@@ -73,6 +73,7 @@ def read_nn(file_name):
             bias.append(bias_layer)
         return dims, weights, bias, input_min, input_max
 
+
 def read_sample(filename):
     """
     read data from npy file, resize it to make it as a vector

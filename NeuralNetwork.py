@@ -140,6 +140,32 @@ class NeuralNetwork:
             x = self.relu(y)
         return x
 
+    def interval_arithmetic(self, x_min, x_max):
+        X_min = []
+        X_max = []
+        Y_min = []
+        Y_max = []
+        X_min.append(x_min.T)
+        X_max.append(x_max.T)
+        for i in range(len(self.dims) - 2):
+            Y_min.append((np.matmul(np.maximum(self.weights[i], np.zeros((self.dims[i + 1], self.dims[i]))),
+                                    X_min[i].T) + np.matmul(
+                np.minimum(self.weights[i], np.zeros((self.dims[i + 1], self.dims[i]))), X_max[i].T) + self.bias[
+                              i]).T)
+            Y_max.append((np.matmul(np.maximum(self.weights[i], np.zeros((self.dims[i + 1], self.dims[i]))),
+                                    X_max[i].T) + np.matmul(
+                np.minimum(self.weights[i], np.zeros((self.dims[i + 1], self.dims[i]))), X_min[i].T) + self.bias[
+                              i]).T)
+
+            X_min.append(self.relu(Y_min[i]))
+            X_max.append(self.relu(Y_max[i]))
+
+        X_min = np.concatenate(X_min[1:], axis=1)
+        X_max = np.concatenate(X_max[1:], axis=1)
+        Y_min = np.concatenate(Y_min[:], axis=1)
+        Y_max = np.concatenate(Y_max[:], axis=1)
+        return Y_min, Y_max, X_min, X_max
+
 
     def relu(self, x):
         return np.maximum(x, 0)
