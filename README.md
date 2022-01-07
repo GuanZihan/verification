@@ -33,7 +33,7 @@ yalmip
 ```
 The following command will launch a verification on MNIST dataset with PGDNN (Raghunathan et al., 2018)
 ```shell
-python3 index.py --dataset MNIST --nnfile model/raghunathan18_pgdnn.pkl --eps 0.1 --dims "[784, 200, 100, 50, 10]" --method "sdpnet" --num 30 --input_bounds "(0., 1.)" --output mnist_log.txt
+python index.py --dataset MNIST --nnfile model/raghunathan18_pgdnn.pkl --eps 0.1 --dims "[784, 200, 100, 50, 10]" --method "sdpnet" --num 30 --input_bounds "(0., 1.)" --output mnist_log.txt
 ```
 
 If you want to self-train a neural network and verify it, we provide a `train.py` method to train a neural network and generate the required files
