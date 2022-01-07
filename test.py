@@ -2,7 +2,7 @@ import matlab.engine
 import numpy as np
 import Utils as util
 from NeuralNetwork import NeuralNetwork
-from boundprop import boundprop
+from boundprop import bound_prop
 # from jax_verify.src.sdp_verify import crown_boundprop
 from sklearn import datasets
 import pickle
@@ -84,8 +84,6 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
     solved_plus = 0
 
     for index, _ in enumerate(X):
-        if index >= 1:
-            break
         original_sample_image = X[index]
         sample_image = np.reshape(original_sample_image, (dims[0], 1))
         util.write_single_data_to_matlab_path('./matlab/sample.mat', 'input', sample_image)
@@ -99,16 +97,13 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
             target = (target + 1) % dims[-1]
 
         # use crown to get the bounds
-        # bounds = crown_boundprop.boundprop(params, np.expand_dims(original_sample_image, axis=0), eps,
-        #                                    input_bounds=input_bounds)
-
-        # bounds = util.process_bounds(bounds)
+        bounds = bound_prop(weights, bias, sample_image, eps, input_bounds)
 
         # write bounds into the .mat file
-        # util.write_single_data_to_matlab_path('./matlab/y_min.mat', 'y_min', bounds[0])
-        # util.write_single_data_to_matlab_path('./matlab/y_max.mat', 'y_max', bounds[1])
-        # util.write_single_data_to_matlab_path('./matlab/x_min.mat', 'x_min', bounds[2])
-        # util.write_single_data_to_matlab_path('./matlab/x_max.mat', 'x_max', bounds[3])
+        util.write_single_data_to_matlab_path('./matlab/y_min.mat', 'y_min', bounds[0])
+        util.write_single_data_to_matlab_path('./matlab/y_max.mat', 'y_max', bounds[1])
+        util.write_single_data_to_matlab_path('./matlab/x_min.mat', 'x_min', bounds[2])
+        util.write_single_data_to_matlab_path('./matlab/x_max.mat', 'x_max', bounds[3])
 
         print("No." + str(index) + " sample target label is " + str(target) + " true label is " + str(sample_label))
 

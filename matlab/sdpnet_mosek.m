@@ -1,4 +1,4 @@
-function [bound, time,status] =  deepsdp(net,x_min,x_max,label,target,options)
+function [bound, time,status] =  sdpnet_mosek(net,x_min,x_max,label,target,options)
 solver = "MOSEK";
 weights = net.weights;
 biases = net.biases;
@@ -11,14 +11,14 @@ X_min{1} = x_min;
 X_max{1} = x_max;
 
 % interval propagation
-for k=1:num_hidden_layers+1
-    Y_min{k} = max(net.weights{k},0)*X_min{k}+min(net.weights{k},0)*X_max{k}+net.biases{k}(:);
-    Y_max{k} = min(net.weights{k},0)*X_min{k}+max(net.weights{k},0)*X_max{k}+net.biases{k}(:);
 
-    if(k<=num_hidden_layers)
-        X_min{k+1} = max(Y_min{k},0);
-        X_max{k+1} = max(Y_max{k},0);
-    end
+for k=1:(num_hidden_layers+1)
+   Y_max{k} = double(load("y_max").y_max{k}');
+   Y_min{k} = double(load("y_min").y_min{k}');
+   if(k<=num_hidden_layers)
+       X_max{k+1} = double(load("x_max").x_max{k}');
+       X_min{k+1} = double(load("x_min").x_min{k}');
+   end
 end
 
 

@@ -48,14 +48,14 @@ end
 
 
 if method == 2
-        [bounds, times, ~] = DeepSDP(net,x_min,x_max,label,target,options);
+        [bounds, times, ~] = deepsdp_multi(net,x_min,x_max,label,target,options);
         if bounds > 0
             status = 0;
         end
 end
 
 if method == 3
-        [bounds, times, ~] = sdpnet(net,x_min,x_max,label,target, num, options);
+        [bounds, times, ~] = sdpnet_mosek(net,x_min,x_max,label,target, options);
         if bounds > 0
             status = 0;
         end
