@@ -3,7 +3,6 @@ import numpy as np
 import Utils as util
 from NeuralNetwork import NeuralNetwork
 from boundprop import bound_prop
-# from jax_verify.src.sdp_verify import crown_boundprop
 from sklearn import datasets
 import pickle
 
@@ -15,8 +14,6 @@ def _load_weights(path):
 
 
 def _load_weights_pkl(path):
-    weights = 0
-    bias = 0
     with util.open_file(path, 'rb') as f:
         nn_f = np.load(f, allow_pickle=True)
         W = []
@@ -57,7 +54,7 @@ def test(eps, dataset, dims, nn_file, input_bounds, num, method, output):
         X = data_['data']
         y = data_['target']
     # extract neural network and store the weights and bias into an instance
-    params = _load_weights(nn_file)
+    # params = _load_weights(nn_file)
     weights, bias = _load_weights_pkl(nn_file)
     assert len(weights) == len(bias)
     print("neural network: ", nn_file)
